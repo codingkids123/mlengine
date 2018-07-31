@@ -40,9 +40,9 @@ class SparkModel[M <: Model[M] with MLWritable](val model: M, val featureToIndex
 
   private[mlengine] def getPredictionSets(sparkPredictions: Dataset[SparkPrediction]) = {
     sparkPredictions.map(row => {
-      val predictions = Option(row.probability) match {
-        case Some(probability) =>
-          probability.toArray.zipWithIndex
+      val predictions = Option(row.rawPrediction) match {
+        case Some(rawPrediction) =>
+          rawPrediction.toArray.zipWithIndex
             .map(p => Prediction(indexToLabelMap.get(p._2), Some(p._1))).toSeq
         case None =>
           Seq(Prediction(indexToLabelMap.get(row.prediction.toInt), None))

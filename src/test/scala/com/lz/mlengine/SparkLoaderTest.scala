@@ -51,7 +51,10 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
       modelToSave.featureToIndexMap.toSeq.sorted.toString,
       modelLoaded.featureToIndexMap.toSeq.sorted.toString
     )
-    assertEquals(modelToSave.indexToLabelMap.toString, modelLoaded.indexToLabelMap.toString)
+    assertEquals(
+      modelToSave.indexToLabelMap.toSeq.sorted.toString,
+      modelLoaded.indexToLabelMap.toSeq.sorted.toString
+    )
   }
 
 }

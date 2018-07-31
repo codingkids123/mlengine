@@ -28,7 +28,7 @@ class SparkModelTest extends FlatSpec with Matchers with DatasetSuiteBase with P
     assertDatasetEquals(expected, sparkFeatures)
   }
 
-  "getSparkFeatures" should "ignore feature not present in featureToIndexMap" in {
+  it should "ignore feature not present in featureToIndexMap" in {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 0.0, "feature4" -> 0.0))
     ).toDS
@@ -52,9 +52,9 @@ class SparkModelTest extends FlatSpec with Matchers with DatasetSuiteBase with P
     val predictions = getModel().getPredictionSets(sparkPredictions)
 
     val expected = Seq(
-      PredictionSet("1", Seq(Prediction(Some("negative"), Some(0.2)), Prediction(Some("positive"), Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(Some("negative"), Some(0.3)), Prediction(Some("positive"), Some(0.7)))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), Some(0.8)), Prediction(Some("positive"), Some(0.2))))
+      PredictionSet("1", Seq(Prediction(Some("negative"), Some(-0.8)), Prediction(Some("positive"), Some(0.8)))),
+      PredictionSet("2", Seq(Prediction(Some("negative"), Some(-0.7)), Prediction(Some("positive"), Some(0.7)))),
+      PredictionSet("3", Seq(Prediction(Some("negative"), Some(0.8)), Prediction(Some("positive"), Some(-0.8))))
     ).toDS
 
     assertDatasetEquals(expected, predictions)
@@ -70,9 +70,9 @@ class SparkModelTest extends FlatSpec with Matchers with DatasetSuiteBase with P
     val predictions = getModel().predict(features)
 
     val expected = Seq(
-      PredictionSet("1", Seq(Prediction(Some("negative"), Some(0.2)), Prediction(Some("positive"), Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(Some("negative"), Some(0.3)), Prediction(Some("positive"), Some(0.7)))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), Some(0.8)), Prediction(Some("positive"), Some(0.2))))
+      PredictionSet("1", Seq(Prediction(Some("negative"), Some(-0.8)), Prediction(Some("positive"), Some(0.8)))),
+      PredictionSet("2", Seq(Prediction(Some("negative"), Some(-0.7)), Prediction(Some("positive"), Some(0.7)))),
+      PredictionSet("3", Seq(Prediction(Some("negative"), Some(0.8)), Prediction(Some("positive"), Some(-0.8))))
     ).toDS
 
     assertDatasetEquals(expected, predictions)
