@@ -29,11 +29,22 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     assertDatasetEquals(expected, features)
   }
 
-  @Test def testTrainAndPredict = {
+  @Test def testTrainAndPredictClassification = {
     val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
-    val labelPath = getClass.getClassLoader.getResource("sample_labels.txt").getFile()
-    val modelPath = s"${temporaryFolder.getRoot.getPath}/test_model"
-    val predictionPath = s"${temporaryFolder.getRoot.getPath}/predictions"
+    val labelPath = getClass.getClassLoader.getResource("sample_classification_labels.txt").getFile()
+    val modelPath = s"${temporaryFolder.getRoot.getPath}/classification_model"
+    val predictionPath = s"${temporaryFolder.getRoot.getPath}/classification_model/predictions"
+    SparkMLPipeline.train("LogisticRegression", modelPath, featurePath, labelPath)
+    SparkMLPipeline.predict("LogisticRegression", modelPath, featurePath, predictionPath)
+    val predictions = spark.read.json(predictionPath).as[PredictionSet].collect()
+    assertEquals(3, predictions.length)
+  }
+
+  @Test def testTrainAndPredictRegression = {
+    val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
+    val labelPath = getClass.getClassLoader.getResource("sample_regression_labels.txt").getFile()
+    val modelPath = s"${temporaryFolder.getRoot.getPath}/regression_model"
+    val predictionPath = s"${temporaryFolder.getRoot.getPath}/regression_model/predictions"
     SparkMLPipeline.train("LogisticRegression", modelPath, featurePath, labelPath)
     SparkMLPipeline.predict("LogisticRegression", modelPath, featurePath, predictionPath)
     val predictions = spark.read.json(predictionPath).as[PredictionSet].collect()

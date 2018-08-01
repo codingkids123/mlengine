@@ -6,11 +6,11 @@ import org.apache.spark.ml.util.{MLWritable, MLWriter}
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.types.StructType
 
-class MockSparkModel(predictions: Dataset[SparkPrediction]) extends Model[MockSparkModel] with MLWritable {
+class MockSparkModel extends Model[MockSparkModel] with MLWritable {
 
   override def copy(extra: ParamMap): Nothing = ???
 
-  override def transform(dataset: Dataset[_]): DataFrame = predictions.toDF
+  override def transform(dataset: Dataset[_]): DataFrame = ???
 
   override def transformSchema(schema: StructType): StructType = ???
 

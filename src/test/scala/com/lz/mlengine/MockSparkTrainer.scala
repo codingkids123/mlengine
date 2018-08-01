@@ -7,14 +7,7 @@ import org.apache.spark.sql.types.StructType
 
 class MockSparkTrainer(model: MockSparkModel)(implicit spark: SparkSession) extends Estimator[MockSparkModel]{
 
-  import spark.implicits._
-
-  var trainingData: Dataset[LabeledSparkFeature] = _
-
-  override def fit(dataset: Dataset[_]): MockSparkModel = {
-    trainingData = dataset.as[LabeledSparkFeature]
-    model
-  }
+  override def fit(dataset: Dataset[_]): MockSparkModel = model
 
   override def copy(extra: ParamMap): Estimator[MockSparkModel] = ???
 

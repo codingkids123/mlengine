@@ -4,24 +4,22 @@ import org.apache.spark.ml.Model
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.util.MLWritable
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 case class SparkFeature(id: String, features: Vector)
 
-case class SparkPrediction(id: String, probability: Vector, rawPrediction: Vector, prediction: Double)
+case class SparkPredictionVector(id: String, rawPrediction: Vector)
+
+case class SparkPredictionScalar(id: String, prediction: Double)
 
 class SparkModel[M <: Model[M] with MLWritable](val model: M, val featureToIndexMap: Map[String, Int],
-                                                val indexToLabelMap: Map[Int, String])
+                                                val indexToLabelMapMaybe: Option[Map[Int, String]])
                                                (implicit spark: SparkSession) extends Serializable {
+
   import spark.implicits._
 
   def predict(features: Dataset[FeatureSet]): Dataset[PredictionSet] = {
-    val sparkFeatures = getSparkFeatures(features)
-
-    val sparkPredictions =
-      model.transform(sparkFeatures).select("id", "probability", "rawPrediction", "prediction").as[SparkPrediction]
-
-    getPredictionSets(sparkPredictions)
+    getPredictionSets(model.transform(getSparkFeatures(features)))
   }
 
   private[mlengine] def getSparkFeatures(features: Dataset[FeatureSet]) = {
@@ -38,23 +36,33 @@ class SparkModel[M <: Model[M] with MLWritable](val model: M, val featureToIndex
     })
   }
 
-  private[mlengine] def getPredictionSets(sparkPredictions: Dataset[SparkPrediction]) = {
-    sparkPredictions.map(row => {
-      val predictions = Option(row.rawPrediction) match {
-        case Some(rawPrediction) =>
-          rawPrediction.toArray.zipWithIndex
-            .map(p => Prediction(indexToLabelMap.get(p._2), Some(p._1))).toSeq
-        case None =>
-          Seq(Prediction(indexToLabelMap.get(row.prediction.toInt), None))
-      }
-      PredictionSet(row.id, predictions)
-    })
+  private[mlengine] def getPredictionSets(sparkPredictions: DataFrame) = {
+    indexToLabelMapMaybe match {
+      case Some(_) =>
+        sparkPredictions.select("id", "rawPrediction").as[SparkPredictionVector]
+          .map(row => {
+            val predictions = row.rawPrediction.toArray.zipWithIndex.map(p => {
+              Prediction(indexToLabelMapMaybe.get.get(p._2), Some(p._1))
+            })
+            PredictionSet(row.id, predictions)
+          })
+      case None =>
+        sparkPredictions.select("id", "prediction").as[SparkPredictionScalar]
+          .map(row => {
+            PredictionSet(row.id, Seq(Prediction(None, Some(row.prediction))))
+          })
+    }
   }
 
   def save(path: String): Unit = {
     model.save(s"${path}/model")
     featureToIndexMap.toSeq.toDS.write.format("parquet").save(s"${path}/feature_to_idx")
-    indexToLabelMap.toSeq.toDS.write.format("parquet").save(s"${path}/idx_to_label")
+    indexToLabelMapMaybe match {
+      case Some(indexToLabelMap) => {
+        indexToLabelMap.toSeq.toDS.write.format("parquet").save(s"${path}/idx_to_label")
+      }
+      case None =>
+    }
   }
 
 }

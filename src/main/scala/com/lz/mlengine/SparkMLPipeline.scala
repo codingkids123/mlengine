@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import org.apache.spark.ml.classification._
+import org.apache.spark.ml.regression._
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.types._
 
@@ -18,6 +19,13 @@ object SparkMLPipeline {
   val RANDOM_FOREST_CLASSIFIER = "RandomForestClassifier"
 
   // Regression.
+  val AFT_SURVIVAL_REGRESSION = "AFTSurvivalRegression"
+  val DECISION_TREE_REGRESSOR = "DecisionTreeRegressor"
+  val GBT_REGRESSOR = "GBTRegressor"
+  val GENERALIZED_LINEAR_REGRESSION = "GeneralizedLinearRegression"
+  val ISOTONIC_REGRESSION = "IsotonicRegression"
+  val LINEAR_REGRESSION = "LinearRegression"
+  val RANDOM_FOREST_REGRESSOR = "RandomForestRegressor"
 
   val MODE_TRAIN = "train"
   val MODE_PREDICT = "predict"
@@ -65,6 +73,7 @@ object SparkMLPipeline {
       .map(l => PredictionSet(l.id, Seq(Prediction(Some(l.label), None))))
 
     val trainer = modelName match {
+      // Classification models.
       case DECISION_TREE => {
         val sparkTrainer = new DecisionTreeClassifier()
         new SparkTrainer[DecisionTreeClassifier, DecisionTreeClassificationModel](sparkTrainer)
@@ -93,6 +102,36 @@ object SparkMLPipeline {
         val sparkTrainer = new RandomForestClassifier()
         new SparkTrainer[RandomForestClassifier, RandomForestClassificationModel](sparkTrainer)
       }
+
+      // Regression models.
+      case AFT_SURVIVAL_REGRESSION => {
+        val sparkTrainer = new AFTSurvivalRegression()
+        new SparkTrainer[AFTSurvivalRegression, AFTSurvivalRegressionModel](sparkTrainer)
+      }
+      case DECISION_TREE_REGRESSOR => {
+        val sparkTrainer = new DecisionTreeRegressor()
+        new SparkTrainer[DecisionTreeRegressor, DecisionTreeRegressionModel](sparkTrainer)
+      }
+      case GBT_REGRESSOR => {
+        val sparkTrainer = new GBTRegressor()
+        new SparkTrainer[GBTRegressor, GBTRegressionModel](sparkTrainer)
+      }
+      case GENERALIZED_LINEAR_REGRESSION => {
+        val sparkTrainer = new GeneralizedLinearRegression()
+        new SparkTrainer[GeneralizedLinearRegression, GeneralizedLinearRegressionModel](sparkTrainer)
+      }
+      case ISOTONIC_REGRESSION => {
+        val sparkTrainer = new IsotonicRegression()
+        new SparkTrainer[IsotonicRegression, IsotonicRegressionModel](sparkTrainer)
+      }
+      case LINEAR_REGRESSION => {
+        val sparkTrainer = new LinearRegression()
+        new SparkTrainer[LinearRegression, LinearRegressionModel](sparkTrainer)
+      }
+      case RANDOM_FOREST_REGRESSOR => {
+        val sparkTrainer = new RandomForestRegressor()
+        new SparkTrainer[RandomForestRegressor, RandomForestRegressionModel](sparkTrainer)
+      }
     }
     val features = loadFeatures(featurePath)
     trainer.fit(features, labels).save(modelPath)
@@ -101,6 +140,7 @@ object SparkMLPipeline {
   def predict(modelName: String, modelPath: String, featurePath: String, predictionPath: String)
              (implicit spark: SparkSession): Unit = {
     val model = modelName match {
+      // Classification models.
       case DECISION_TREE => SparkLoader.decisionTreeClassificationModel(modelPath)
       case GBT_CLASSIFIER => SparkLoader.gBTClassificationModel(modelPath)
       case LINEAR_SVC => SparkLoader.linearSVCModel(modelPath)
@@ -108,6 +148,15 @@ object SparkMLPipeline {
       case MULTILAYER_PERCEPTRON => SparkLoader.multilayerPerceptronClassificationModel(modelPath)
       case NAIVE_BAYES => SparkLoader.naiveBayesModel(modelPath)
       case RANDOM_FOREST_CLASSIFIER => SparkLoader.randomForestClassificationModel(modelPath)
+
+      // Regression models.
+      case AFT_SURVIVAL_REGRESSION => SparkLoader.aFTSurvivalRegressionModel(modelPath)
+      case DECISION_TREE_REGRESSOR => SparkLoader.decisionTreeRegressorModel(modelPath)
+      case GBT_REGRESSOR => SparkLoader.gBTRegressionModel(modelPath)
+      case GENERALIZED_LINEAR_REGRESSION => SparkLoader.generalizedLinearRegressionModel(modelPath)
+      case ISOTONIC_REGRESSION => SparkLoader.isotonicRegressionModel(modelPath)
+      case LINEAR_REGRESSION => SparkLoader.linearRegressionModel(modelPath)
+      case RANDOM_FOREST_REGRESSOR => SparkLoader.randomForestRegressionModel(modelPath)
     }
     val features = loadFeatures(featurePath)
     model.predict(features).write.format("json").save(predictionPath)
