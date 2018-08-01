@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import org.apache.spark.ml.classification._
+import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.linalg.Vectors
@@ -14,7 +15,7 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
 
   import spark.implicits._
 
-  def fit(features: Dataset[FeatureSet], labels: Dataset[PredictionSet]): SparkModel[M] = {
+  def fit(features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]]) = {
 
     val featureToIndexMap = getFeatureToIndexMap(features)
 
@@ -22,22 +23,20 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
       // Classification models.
       case _: DecisionTreeClassifier | _: GBTClassifier | _: LinearSVC | _: LogisticRegression |
            _: MultilayerPerceptronClassifier | _: NaiveBayes | _: RandomForestClassifier => {
-        val labelToIndexMap = getLabelToIndexMap(labels)
-        val labeledVectors = getLabeledSparkFeature(features, labels, featureToIndexMap, Some(labelToIndexMap))
+        val labelToIndexMap = getLabelToIndexMap(labels.get)
+        val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
         val sparkModel = trainer.fit(labeledVectors)
         val indexToLabelMap = labelToIndexMap.map(_.swap)
         new SparkModel[M](sparkModel, featureToIndexMap, Some(indexToLabelMap))
       }
       // Regression models.
-      case _: AFTSurvivalRegression | _: DecisionTreeRegressor | _: GBTRegressor | _: GeneralizedLinearRegression |
+      case _: DecisionTreeRegressor | _: GBTRegressor | _: GeneralizedLinearRegression |
            _: IsotonicRegression | _: LinearRegression | _: RandomForestRegressor => {
-        val labeledVectors = getLabeledSparkFeature(features, labels, featureToIndexMap, None)
+        val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
         val sparkModel = trainer.fit(labeledVectors)
         new SparkModel[M](sparkModel, featureToIndexMap, None)
       }
-      // Clustering models.
     }
-
   }
 
   private[mlengine] def getFeatureToIndexMap(features: Dataset[FeatureSet]): Map[String, Int] = {

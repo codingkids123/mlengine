@@ -3,9 +3,6 @@ package com.lz.mlengine
 import org.apache.spark.ml.classification._
 import org.apache.spark.ml.regression._
 import org.apache.spark.sql.{Dataset, SparkSession}
-import org.apache.spark.sql.types._
-
-case class Label(id: String, label: String)
 
 object SparkMLPipeline {
 
@@ -19,13 +16,20 @@ object SparkMLPipeline {
   val RANDOM_FOREST_CLASSIFIER = "RandomForestClassifier"
 
   // Regression.
-  val AFT_SURVIVAL_REGRESSION = "AFTSurvivalRegression"
   val DECISION_TREE_REGRESSOR = "DecisionTreeRegressor"
   val GBT_REGRESSOR = "GBTRegressor"
   val GENERALIZED_LINEAR_REGRESSION = "GeneralizedLinearRegression"
   val ISOTONIC_REGRESSION = "IsotonicRegression"
   val LINEAR_REGRESSION = "LinearRegression"
   val RANDOM_FOREST_REGRESSOR = "RandomForestRegressor"
+
+  val CLASSIFICATION_MODELS = Seq(
+    DECISION_TREE, GBT_CLASSIFIER, LINEAR_SVC, LOGISTIC_REGRESSION, NAIVE_BAYES, RANDOM_FOREST_CLASSIFIER
+  )
+  val REGRESSION_MODELS = Seq(
+    DECISION_TREE_REGRESSOR, GBT_REGRESSOR, GENERALIZED_LINEAR_REGRESSION, ISOTONIC_REGRESSION,
+    LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR
+  )
 
   val MODE_TRAIN = "train"
   val MODE_PREDICT = "predict"
@@ -57,22 +61,31 @@ object SparkMLPipeline {
 
   def loadFeatures(path: String)(implicit spark: SparkSession): Dataset[FeatureSet] = {
     import spark.implicits._
-
-    val schema = StructType(
-      Seq(StructField("id", StringType), StructField("features", MapType(StringType, DoubleType)))
-    )
-    spark.read.schema(schema).json(path).as[FeatureSet]
+    spark.read.schema(FeatureSet.schema).json(path).as[FeatureSet]
   }
 
-  def train(modelName: String, modelPath: String, featurePath: String, labelPath: String)
-           (implicit spark: SparkSession): Unit = {
+  def loadClassificationLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
     import spark.implicits._
+    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Seq(Prediction(Some(l.getString(1)), None))))
+  }
 
-    val schema = StructType(Seq(StructField("id", StringType), StructField("label", StringType)))
-    val labels = spark.read.schema(schema).csv(labelPath).as[Label]
-      .map(l => PredictionSet(l.id, Seq(Prediction(Some(l.label), None))))
+  def loadRegressionLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
+    import spark.implicits._
+    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Seq(Prediction(None, Some(l.getString(1).toDouble)))))
+  }
 
-    val trainer = modelName match {
+  def loadLabels(modelName: String, labelPath: String)(implicit spark: SparkSession): Option[Dataset[PredictionSet]] = {
+    if (CLASSIFICATION_MODELS.contains(modelName)) {
+      Some(loadClassificationLabels(labelPath))
+    } else if (REGRESSION_MODELS.contains(modelName)) {
+      Some(loadRegressionLabels(labelPath))
+    } else {
+      None
+    }
+  }
+
+  def getTrainer(modelName: String)(implicit spark: SparkSession):SparkTrainer[_, _] = {
+    modelName match {
       // Classification models.
       case DECISION_TREE => {
         val sparkTrainer = new DecisionTreeClassifier()
@@ -104,10 +117,6 @@ object SparkMLPipeline {
       }
 
       // Regression models.
-      case AFT_SURVIVAL_REGRESSION => {
-        val sparkTrainer = new AFTSurvivalRegression()
-        new SparkTrainer[AFTSurvivalRegression, AFTSurvivalRegressionModel](sparkTrainer)
-      }
       case DECISION_TREE_REGRESSOR => {
         val sparkTrainer = new DecisionTreeRegressor()
         new SparkTrainer[DecisionTreeRegressor, DecisionTreeRegressionModel](sparkTrainer)
@@ -133,13 +142,10 @@ object SparkMLPipeline {
         new SparkTrainer[RandomForestRegressor, RandomForestRegressionModel](sparkTrainer)
       }
     }
-    val features = loadFeatures(featurePath)
-    trainer.fit(features, labels).save(modelPath)
   }
 
-  def predict(modelName: String, modelPath: String, featurePath: String, predictionPath: String)
-             (implicit spark: SparkSession): Unit = {
-    val model = modelName match {
+  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):SparkModel[_] = {
+    modelName match {
       // Classification models.
       case DECISION_TREE => SparkLoader.decisionTreeClassificationModel(modelPath)
       case GBT_CLASSIFIER => SparkLoader.gBTClassificationModel(modelPath)
@@ -150,7 +156,6 @@ object SparkMLPipeline {
       case RANDOM_FOREST_CLASSIFIER => SparkLoader.randomForestClassificationModel(modelPath)
 
       // Regression models.
-      case AFT_SURVIVAL_REGRESSION => SparkLoader.aFTSurvivalRegressionModel(modelPath)
       case DECISION_TREE_REGRESSOR => SparkLoader.decisionTreeRegressorModel(modelPath)
       case GBT_REGRESSOR => SparkLoader.gBTRegressionModel(modelPath)
       case GENERALIZED_LINEAR_REGRESSION => SparkLoader.generalizedLinearRegressionModel(modelPath)
@@ -158,6 +163,19 @@ object SparkMLPipeline {
       case LINEAR_REGRESSION => SparkLoader.linearRegressionModel(modelPath)
       case RANDOM_FOREST_REGRESSOR => SparkLoader.randomForestRegressionModel(modelPath)
     }
+  }
+
+  def train(modelName: String, modelPath: String, featurePath: String, labelPath: String)
+           (implicit spark: SparkSession): Unit = {
+    val trainer = getTrainer(modelName)
+    val features = loadFeatures(featurePath)
+    val labels = loadLabels(modelName, labelPath)
+    trainer.fit(features, labels).save(modelPath)
+  }
+
+  def predict(modelName: String, modelPath: String, featurePath: String, predictionPath: String)
+             (implicit spark: SparkSession): Unit = {
+    val model = getModel(modelName, modelPath)
     val features = loadFeatures(featurePath)
     model.predict(features).write.format("json").save(predictionPath)
   }

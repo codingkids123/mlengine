@@ -105,7 +105,7 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val trainer = getClassificationTrainer()
-    val model = trainer.fit(features, labels)
+    val model = trainer.fit(features, Some(labels))
 
     model.model should not be(null)
     model.featureToIndexMap should be(Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2))
@@ -126,7 +126,7 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val trainer = getRegressionTrainer()
-    val model = trainer.fit(features, labels)
+    val model = trainer.fit(features, Some(labels))
 
     model.model should not be(null)
     model.featureToIndexMap should be(Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2))

@@ -38,7 +38,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
     ).toDS
 
     val trainer = new SparkTrainer[LogisticRegression, LogisticRegressionModel](lr)
-    val modelToSave = trainer.fit(features, labels)
+    val modelToSave = trainer.fit(features, Some(labels))
 
     val path = s"${temporaryFolder.getRoot.getPath}/classification_model"
     modelToSave.save(path)
@@ -75,7 +75,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
     ).toDS
 
     val trainer = new SparkTrainer[LinearRegression, LinearRegressionModel](lr)
-    val modelToSave = trainer.fit(features, labels)
+    val modelToSave = trainer.fit(features, Some(labels))
 
     val path = s"${temporaryFolder.getRoot.getPath}/regression_model"
     modelToSave.save(path)
