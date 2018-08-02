@@ -42,15 +42,13 @@ class SparkModel[M <: Model[M] with MLWritable](val model: M, val featureToIndex
         sparkPredictions.select("id", "rawPrediction").as[SparkPredictionVector]
           .map(row => {
             val predictions = row.rawPrediction.toArray.zipWithIndex.map(p => {
-              Prediction(indexToLabelMapMaybe.get.get(p._2), Some(p._1))
-            })
+              (indexToLabelMapMaybe.get.get(p._2).get, p._1)
+            }).toMap
             PredictionSet(row.id, predictions)
           })
       case None =>
         sparkPredictions.select("id", "prediction").as[SparkPredictionScalar]
-          .map(row => {
-            PredictionSet(row.id, Seq(Prediction(None, Some(row.prediction))))
-          })
+          .map(row => PredictionSet(row.id, Map("value" -> row.prediction)))
     }
   }
 

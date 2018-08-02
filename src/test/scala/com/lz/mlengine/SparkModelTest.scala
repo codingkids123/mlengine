@@ -52,9 +52,9 @@ class SparkModelTest extends FlatSpec with Matchers with DatasetSuiteBase with P
     val predictions = getClassificationModel().getPredictionSets(sparkPredictions)
 
     val expected = Seq(
-      PredictionSet("1", Seq(Prediction(Some("negative"), Some(-0.8)), Prediction(Some("positive"), Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(Some("negative"), Some(-0.5)), Prediction(Some("positive"), Some(0.5)))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), Some(-0.2)), Prediction(Some("positive"), Some(0.2))))
+      PredictionSet("1", Map("negative" -> -0.8, "positive" -> 0.8)),
+      PredictionSet("2", Map("negative" -> -0.5, "positive" -> 0.5)),
+      PredictionSet("3", Map("negative" -> -0.2, "positive" -> 0.2))
     ).toDS
 
     assertDatasetEquals(expected, predictions)
@@ -70,9 +70,9 @@ class SparkModelTest extends FlatSpec with Matchers with DatasetSuiteBase with P
     val predictions = getRegressionModel().getPredictionSets(sparkPredictions)
 
     val expected = Seq(
-      PredictionSet("1", Seq(Prediction(None, Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(None, Some(0.5)))),
-      PredictionSet("3", Seq(Prediction(None, Some(0.2))))
+      PredictionSet("1", Map("value" -> 0.8)),
+      PredictionSet("2", Map("value" -> 0.5)),
+      PredictionSet("3", Map("value" -> 0.2))
     ).toDS
 
     assertDatasetEquals(expected, predictions)

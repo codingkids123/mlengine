@@ -57,7 +57,7 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
 
   private[mlengine] def getLabelToIndexMap(labels: Dataset[PredictionSet]): Map[String, Int] = {
     labels
-      .flatMap(l => l.predictions(0).label)
+      .flatMap(l => l.predictions.keys)
       .distinct()
       .collect()
       .sorted
@@ -76,9 +76,9 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
         val feature = Vectors.sparse(featureToIndexMap.size, values)
         val label = labelToIndexMapMaybe match {
           case Some(labelToIndexMap) =>
-            labelToIndexMap.get(row._2.predictions(0).label.get).get.toDouble
+            labelToIndexMap.get(row._2.predictions.head._1).get.toDouble
           case None =>
-            row._2.predictions(0).value.get
+            row._2.predictions.get("value").get
         }
         LabeledSparkFeature(row._1.id, feature, label)
       })

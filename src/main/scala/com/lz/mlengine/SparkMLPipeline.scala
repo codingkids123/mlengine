@@ -74,12 +74,12 @@ object SparkMLPipeline {
 
   def loadClassificationLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
     import spark.implicits._
-    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Seq(Prediction(Some(l.getString(1)), None))))
+    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Map(l.getString(1) -> 1.0)))
   }
 
   def loadRegressionLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
     import spark.implicits._
-    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Seq(Prediction(None, Some(l.getString(1).toDouble)))))
+    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Map("value" -> l.getString(1).toDouble)))
   }
 
   def loadLabels(modelName: String, labelPath: String)(implicit spark: SparkSession): Option[Dataset[PredictionSet]] = {

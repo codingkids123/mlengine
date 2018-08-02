@@ -32,9 +32,9 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("2", Seq(Prediction(Some("negative"), None))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), None)))
+      PredictionSet("1", Map("positive" -> 1.0)),
+      PredictionSet("2", Map("negative" -> 1.0)),
+      PredictionSet("3", Map("negative" -> 1.0))
     ).toDS
 
     val trainer = new SparkTrainer[LogisticRegression, LogisticRegressionModel](lr)
@@ -69,9 +69,9 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(None, Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(None, Some(0.5)))),
-      PredictionSet("3", Seq(Prediction(None, Some(0.2))))
+      PredictionSet("1", Map("value" -> 0.8)),
+      PredictionSet("2", Map("value" -> 0.5)),
+      PredictionSet("3", Map("value" -> 0.2))
     ).toDS
 
     val trainer = new SparkTrainer[LinearRegression, LinearRegressionModel](lr)

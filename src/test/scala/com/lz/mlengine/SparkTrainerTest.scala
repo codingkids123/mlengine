@@ -26,9 +26,9 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
 
   "getLabelToIndexMap" should "generate a map from label to index" in {
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("2", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), None)))
+      PredictionSet("1", Map("positive" -> 1.0)),
+      PredictionSet("2", Map("positive" -> 1.0)),
+      PredictionSet("3", Map("negative" -> 1.0))
     ).toDS
 
     val labelToIndexMap = getClassificationTrainer().getLabelToIndexMap(labels)
@@ -44,9 +44,9 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("2", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), None)))
+      PredictionSet("1", Map("positive" -> 1.0)),
+      PredictionSet("2", Map("positive" -> 1.0)),
+      PredictionSet("3", Map("negative" -> 1.0))
     ).toDS
 
     val featureToIndexMap = Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2)
@@ -72,9 +72,9 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(None, Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(None, Some(0.5)))),
-      PredictionSet("3", Seq(Prediction(None, Some(0.2))))
+      PredictionSet("1", Map("value" -> 0.8)),
+      PredictionSet("2", Map("value" -> 0.5)),
+      PredictionSet("3", Map("value" -> 0.2))
     ).toDS
 
     val featureToIndexMap = Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2)
@@ -100,9 +100,9 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("2", Seq(Prediction(Some("positive"), None))),
-      PredictionSet("3", Seq(Prediction(Some("negative"), None)))
+      PredictionSet("1", Map("positive" -> 1.0)),
+      PredictionSet("2", Map("positive" -> 1.0)),
+      PredictionSet("3", Map("negative" -> 1.0))
     ).toDS
 
     val trainer = getClassificationTrainer()
@@ -121,9 +121,9 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     ).toDS
 
     val labels = Seq(
-      PredictionSet("1", Seq(Prediction(None, Some(0.8)))),
-      PredictionSet("2", Seq(Prediction(None, Some(0.5)))),
-      PredictionSet("3", Seq(Prediction(None, Some(0.2))))
+      PredictionSet("1", Map("value" -> 0.8)),
+      PredictionSet("2", Map("value" -> 0.5)),
+      PredictionSet("3", Map("value" -> 0.2))
     ).toDS
 
     val trainer = getRegressionTrainer()
