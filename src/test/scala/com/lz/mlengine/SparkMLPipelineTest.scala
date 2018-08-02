@@ -55,4 +55,17 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     })
   }
 
+  @Test def testTrainAndPredictClustering = {
+    SparkMLPipeline.CLUSTERING_MODELS.foreach(model => {
+      val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
+      val labelPath = ""
+      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}"
+      val predictionPath = s"${temporaryFolder.getRoot.getPath}/${model}/predictions"
+      SparkMLPipeline.train(model, modelPath, featurePath, labelPath)
+      SparkMLPipeline.predict(model, modelPath, featurePath, predictionPath)
+      val predictions = spark.read.schema(PredictionSet.schema).json(predictionPath).as[PredictionSet].collect()
+      assertEquals(3, predictions.length)
+    })
+  }
+
 }

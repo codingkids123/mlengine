@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import org.apache.spark.ml.classification._
+import org.apache.spark.ml.clustering.{GaussianMixture, GaussianMixtureModel, KMeans, KMeansModel}
 import org.apache.spark.ml.regression._
 import org.apache.spark.sql.{Dataset, SparkSession}
 
@@ -23,6 +24,10 @@ object SparkMLPipeline {
   val LINEAR_REGRESSION = "LinearRegression"
   val RANDOM_FOREST_REGRESSOR = "RandomForestRegressor"
 
+  // Clustering.
+  val K_MEANS = "KMeans"
+  val GAUSSIAN_MIXTURE = "GaussianMixture"
+
   val CLASSIFICATION_MODELS = Seq(
     DECISION_TREE, GBT_CLASSIFIER, LINEAR_SVC, LOGISTIC_REGRESSION, NAIVE_BAYES, RANDOM_FOREST_CLASSIFIER
   )
@@ -30,14 +35,17 @@ object SparkMLPipeline {
     DECISION_TREE_REGRESSOR, GBT_REGRESSOR, GENERALIZED_LINEAR_REGRESSION, ISOTONIC_REGRESSION,
     LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR
   )
+  val CLUSTERING_MODELS = Seq(
+    K_MEANS, GAUSSIAN_MIXTURE
+  )
 
   val MODE_TRAIN = "train"
   val MODE_PREDICT = "predict"
 
   def main(args: Array[String]): Unit = {
-    if (args.length < 5) {
+    if (args.length < 4) {
       println(
-        "Wrong number of args! Correct args: <mode> <model type> <model path> <feature path> <label | prediction path>"
+        "Wrong number of args! Correct args: <mode> <model type> <model path> <feature path> [<label | prediction path>]"
       )
       return
     }
@@ -45,8 +53,8 @@ object SparkMLPipeline {
     val modelType = args(1)
     val modelPath = args(2)
     val featurePath = args(3)
-    val predictionPath = args(4)
-    val labelPath = args(4)
+    val predictionPath = if (args.length == 4) args(4) else ""
+    val labelPath = if (args.length == 4) args(4) else ""
 
     implicit val spark = SparkSession
       .builder()
@@ -79,68 +87,54 @@ object SparkMLPipeline {
       Some(loadClassificationLabels(labelPath))
     } else if (REGRESSION_MODELS.contains(modelName)) {
       Some(loadRegressionLabels(labelPath))
-    } else {
+    } else if (CLUSTERING_MODELS.contains(modelName)) {
       None
+    } else {
+      throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
   }
 
   def getTrainer(modelName: String)(implicit spark: SparkSession):SparkTrainer[_, _] = {
     modelName match {
       // Classification models.
-      case DECISION_TREE => {
-        val sparkTrainer = new DecisionTreeClassifier()
-        new SparkTrainer[DecisionTreeClassifier, DecisionTreeClassificationModel](sparkTrainer)
-      }
-      case GBT_CLASSIFIER => {
-        val sparkTrainer = new GBTClassifier()
-        new SparkTrainer[GBTClassifier, GBTClassificationModel](sparkTrainer)
-      }
-      case LINEAR_SVC => {
-        val sparkTrainer = new LinearSVC()
-        new SparkTrainer[LinearSVC, LinearSVCModel](sparkTrainer)
-      }
-      case LOGISTIC_REGRESSION => {
-        val sparkTrainer = new LogisticRegression()
-        new SparkTrainer[LogisticRegression, LogisticRegressionModel](sparkTrainer)
-      }
-      case MULTILAYER_PERCEPTRON => {
-        val sparkTrainer = new MultilayerPerceptronClassifier()
-        new SparkTrainer[MultilayerPerceptronClassifier, MultilayerPerceptronClassificationModel](sparkTrainer)
-      }
-      case NAIVE_BAYES => {
-        val sparkTrainer = new NaiveBayes()
-        new SparkTrainer[NaiveBayes, NaiveBayesModel](sparkTrainer)
-      }
-      case RANDOM_FOREST_CLASSIFIER => {
-        val sparkTrainer = new RandomForestClassifier()
-        new SparkTrainer[RandomForestClassifier, RandomForestClassificationModel](sparkTrainer)
-      }
+      case DECISION_TREE =>
+        new SparkTrainer[DecisionTreeClassifier, DecisionTreeClassificationModel](new DecisionTreeClassifier())
+      case GBT_CLASSIFIER =>
+        new SparkTrainer[GBTClassifier, GBTClassificationModel](new GBTClassifier())
+      case LINEAR_SVC =>
+        new SparkTrainer[LinearSVC, LinearSVCModel](new LinearSVC())
+      case LOGISTIC_REGRESSION =>
+        new SparkTrainer[LogisticRegression, LogisticRegressionModel](new LogisticRegression())
+      case MULTILAYER_PERCEPTRON =>
+        new SparkTrainer[MultilayerPerceptronClassifier, MultilayerPerceptronClassificationModel](
+          new MultilayerPerceptronClassifier())
+      case NAIVE_BAYES =>
+        new SparkTrainer[NaiveBayes, NaiveBayesModel](new NaiveBayes())
+      case RANDOM_FOREST_CLASSIFIER =>
+        new SparkTrainer[RandomForestClassifier, RandomForestClassificationModel](new RandomForestClassifier())
 
       // Regression models.
-      case DECISION_TREE_REGRESSOR => {
-        val sparkTrainer = new DecisionTreeRegressor()
-        new SparkTrainer[DecisionTreeRegressor, DecisionTreeRegressionModel](sparkTrainer)
-      }
-      case GBT_REGRESSOR => {
-        val sparkTrainer = new GBTRegressor()
-        new SparkTrainer[GBTRegressor, GBTRegressionModel](sparkTrainer)
-      }
-      case GENERALIZED_LINEAR_REGRESSION => {
-        val sparkTrainer = new GeneralizedLinearRegression()
-        new SparkTrainer[GeneralizedLinearRegression, GeneralizedLinearRegressionModel](sparkTrainer)
-      }
-      case ISOTONIC_REGRESSION => {
-        val sparkTrainer = new IsotonicRegression()
-        new SparkTrainer[IsotonicRegression, IsotonicRegressionModel](sparkTrainer)
-      }
-      case LINEAR_REGRESSION => {
-        val sparkTrainer = new LinearRegression()
-        new SparkTrainer[LinearRegression, LinearRegressionModel](sparkTrainer)
-      }
-      case RANDOM_FOREST_REGRESSOR => {
-        val sparkTrainer = new RandomForestRegressor()
-        new SparkTrainer[RandomForestRegressor, RandomForestRegressionModel](sparkTrainer)
-      }
+      case DECISION_TREE_REGRESSOR =>
+        new SparkTrainer[DecisionTreeRegressor, DecisionTreeRegressionModel](new DecisionTreeRegressor())
+      case GBT_REGRESSOR =>
+        new SparkTrainer[GBTRegressor, GBTRegressionModel](new GBTRegressor())
+      case GENERALIZED_LINEAR_REGRESSION =>
+        new SparkTrainer[GeneralizedLinearRegression, GeneralizedLinearRegressionModel](
+          new GeneralizedLinearRegression())
+      case ISOTONIC_REGRESSION =>
+        new SparkTrainer[IsotonicRegression, IsotonicRegressionModel](new IsotonicRegression())
+      case LINEAR_REGRESSION =>
+        new SparkTrainer[LinearRegression, LinearRegressionModel](new LinearRegression())
+      case RANDOM_FOREST_REGRESSOR =>
+        new SparkTrainer[RandomForestRegressor, RandomForestRegressionModel](new RandomForestRegressor())
+
+      // Clustering models.
+      case K_MEANS =>
+        new SparkTrainer[KMeans, KMeansModel](new KMeans())
+      case GAUSSIAN_MIXTURE =>
+        new SparkTrainer[GaussianMixture, GaussianMixtureModel](new GaussianMixture())
+
+      case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
   }
 
@@ -162,6 +156,12 @@ object SparkMLPipeline {
       case ISOTONIC_REGRESSION => SparkLoader.isotonicRegressionModel(modelPath)
       case LINEAR_REGRESSION => SparkLoader.linearRegressionModel(modelPath)
       case RANDOM_FOREST_REGRESSOR => SparkLoader.randomForestRegressionModel(modelPath)
+
+      // Clustering models.
+      case K_MEANS => SparkLoader.kMeansModel(modelPath)
+      case GAUSSIAN_MIXTURE => SparkLoader.gaussianMixtureModel(modelPath)
+
+      case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
   }
 

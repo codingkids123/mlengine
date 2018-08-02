@@ -1,7 +1,7 @@
 package com.lz.mlengine
 
 import org.apache.spark.ml.classification._
-import org.apache.spark.ml.clustering.KMeans
+import org.apache.spark.ml.clustering.{GaussianMixture, KMeans}
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.linalg.Vectors
@@ -34,6 +34,12 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
            _: IsotonicRegression | _: LinearRegression | _: RandomForestRegressor => {
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
         val sparkModel = trainer.fit(labeledVectors)
+        new SparkModel[M](sparkModel, featureToIndexMap, None)
+      }
+      // Clustering models.
+      case _: KMeans | _: GaussianMixture => {
+        val vectors = getSparkFeature(features, featureToIndexMap)
+        val sparkModel = trainer.fit(vectors)
         new SparkModel[M](sparkModel, featureToIndexMap, None)
       }
     }
@@ -76,6 +82,15 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
         }
         LabeledSparkFeature(row._1.id, feature, label)
       })
+  }
+
+  private[mlengine] def getSparkFeature(features: Dataset[FeatureSet], featureToIndexMap: Map[String, Int]
+                                       ): Dataset[SparkFeature] = {
+    features.map(row => {
+      val values = row.features.toSeq.map(kv => (featureToIndexMap.get(kv._1).get, kv._2)).sortBy(_._1)
+      val feature = Vectors.sparse(featureToIndexMap.size, values)
+      SparkFeature(row.id, feature)
+    })
   }
 
 }

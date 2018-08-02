@@ -2,6 +2,7 @@ package com.lz.mlengine
 
 import org.apache.spark.ml.Model
 import org.apache.spark.ml.classification._
+import org.apache.spark.ml.clustering._
 import org.apache.spark.ml.regression._
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.SparkSession
@@ -78,5 +79,15 @@ object SparkLoader {
   def randomForestRegressionModel(path: String)(implicit spark: SparkSession) = {
     load[RandomForestRegressionModel](RandomForestRegressionModel.load, path, false)
   }
+
+  // Clustering models.
+  def kMeansModel(path: String)(implicit spark: SparkSession) = {
+    load[KMeansModel](KMeansModel.load, path, false)
+  }
+
+  def gaussianMixtureModel(path: String)(implicit spark: SparkSession) = {
+    load[GaussianMixtureModel](GaussianMixtureModel.load, path, false)
+  }
+
 
 }

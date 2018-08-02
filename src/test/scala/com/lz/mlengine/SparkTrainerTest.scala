@@ -3,6 +3,7 @@ package com.lz.mlengine
 import scala.collection.mutable.{Map => MutableMap}
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
+import org.apache.spark.ml.clustering.{KMeans, KMeansModel}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
 import org.scalatest.{FlatSpec, Matchers}
@@ -133,12 +134,31 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
     model.indexToLabelMapMaybe should be(None)
   }
 
+  "fit" should "train clustering model without labels" in {
+    val features = Seq(
+      FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 0.0)),
+      FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 0.0)),
+      FeatureSet("3", MutableMap("feature1" -> 1.0, "feature3" -> 0.0))
+    ).toDS
+
+    val trainer = getClusteringTrainer()
+    val model = trainer.fit(features, None)
+
+    model.model should not be(null)
+    model.featureToIndexMap should be(Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2))
+    model.indexToLabelMapMaybe should be(None)
+  }
+
   def getClassificationTrainer() = {
     new SparkTrainer[LogisticRegression, LogisticRegressionModel](new LogisticRegression())(spark)
   }
 
   def getRegressionTrainer() = {
     new SparkTrainer[LinearRegression, LinearRegressionModel](new LinearRegression())(spark)
+  }
+
+  def getClusteringTrainer() = {
+    new SparkTrainer[KMeans, KMeansModel](new KMeans())(spark)
   }
 
 }
