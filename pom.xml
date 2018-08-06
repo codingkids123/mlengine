@@ -45,6 +45,11 @@
       <artifactId>spark-sql_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.scalanlp</groupId>
+      <artifactId>breeze_2.11</artifactId> <!-- or 2.11 -->
+      <version>0.13.2</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>

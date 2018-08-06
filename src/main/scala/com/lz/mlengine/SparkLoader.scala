@@ -1,9 +1,9 @@
 package com.lz.mlengine
 
 import org.apache.spark.ml.Model
-import org.apache.spark.ml.classification._
-import org.apache.spark.ml.clustering._
-import org.apache.spark.ml.regression._
+import org.apache.spark.ml.classification
+import org.apache.spark.ml.clustering
+import org.apache.spark.ml.regression
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.SparkSession
 
@@ -26,67 +26,73 @@ object SparkLoader {
 
   // Classification models.
   def decisionTreeClassificationModel(path: String)(implicit spark: SparkSession) = {
-    load[DecisionTreeClassificationModel](DecisionTreeClassificationModel.load, path, true)
+    load[classification.DecisionTreeClassificationModel](
+      classification.DecisionTreeClassificationModel.load, path,true
+    )
   }
 
   def gBTClassificationModel(path: String)(implicit spark: SparkSession) = {
-    load[GBTClassificationModel](GBTClassificationModel.load, path, true)
+    load[classification.GBTClassificationModel](classification.GBTClassificationModel.load, path, true)
   }
 
   def linearSVCModel(path: String)(implicit spark: SparkSession) = {
-    load[LinearSVCModel](LinearSVCModel.load, path, true)
+    load[classification.LinearSVCModel](classification.LinearSVCModel.load, path, true)
   }
 
   def logisticRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[LogisticRegressionModel](LogisticRegressionModel.load, path, true)
+    load[classification.LogisticRegressionModel](classification.LogisticRegressionModel.load, path, true)
   }
 
   def multilayerPerceptronClassificationModel(path: String)(implicit spark: SparkSession) = {
-    load[MultilayerPerceptronClassificationModel](MultilayerPerceptronClassificationModel.load, path)
+    load[classification.MultilayerPerceptronClassificationModel](
+      classification.MultilayerPerceptronClassificationModel.load, path
+    )
   }
 
   def naiveBayesModel(path: String)(implicit spark: SparkSession) = {
-    load[NaiveBayesModel](NaiveBayesModel.load, path, true)
+    load[classification.NaiveBayesModel](classification.NaiveBayesModel.load, path, true)
   }
 
   def randomForestClassificationModel(path: String)(implicit spark: SparkSession) = {
-    load[RandomForestClassificationModel](RandomForestClassificationModel.load, path, true)
+    load[classification.RandomForestClassificationModel](
+      classification.RandomForestClassificationModel.load, path, true
+    )
   }
 
   // Regression models.
   def aFTSurvivalRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[AFTSurvivalRegressionModel](AFTSurvivalRegressionModel.load, path, false)
+    load[regression.AFTSurvivalRegressionModel](regression.AFTSurvivalRegressionModel.load, path, false)
   }
 
   def decisionTreeRegressorModel(path: String)(implicit spark: SparkSession) = {
-    load[DecisionTreeRegressionModel](DecisionTreeRegressionModel.load, path, false)
+    load[regression.DecisionTreeRegressionModel](regression.DecisionTreeRegressionModel.load, path, false)
   }
   def gBTRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[GBTRegressionModel](GBTRegressionModel.load, path, false)
+    load[regression.GBTRegressionModel](regression.GBTRegressionModel.load, path, false)
   }
   def generalizedLinearRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[GeneralizedLinearRegressionModel](GeneralizedLinearRegressionModel.load, path, false)
+    load[regression.GeneralizedLinearRegressionModel](regression.GeneralizedLinearRegressionModel.load, path, false)
   }
 
   def isotonicRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[IsotonicRegressionModel](IsotonicRegressionModel.load, path, false)
+    load[regression.IsotonicRegressionModel](regression.IsotonicRegressionModel.load, path, false)
   }
 
   def linearRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[LinearRegressionModel](LinearRegressionModel.load, path, false)
+    load[regression.LinearRegressionModel](regression.LinearRegressionModel.load, path, false)
   }
 
   def randomForestRegressionModel(path: String)(implicit spark: SparkSession) = {
-    load[RandomForestRegressionModel](RandomForestRegressionModel.load, path, false)
+    load[regression.RandomForestRegressionModel](regression.RandomForestRegressionModel.load, path, false)
   }
 
   // Clustering models.
   def kMeansModel(path: String)(implicit spark: SparkSession) = {
-    load[KMeansModel](KMeansModel.load, path, false)
+    load[clustering.KMeansModel](clustering.KMeansModel.load, path, false)
   }
 
   def gaussianMixtureModel(path: String)(implicit spark: SparkSession) = {
-    load[GaussianMixtureModel](GaussianMixtureModel.load, path, false)
+    load[clustering.GaussianMixtureModel](clustering.GaussianMixtureModel.load, path, false)
   }
 
 

@@ -2,10 +2,10 @@ package com.lz.mlengine
 
 import scala.collection.mutable.{Map => MutableMap}
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
-import org.apache.spark.ml.clustering.{KMeans, KMeansModel}
+import org.apache.spark.ml.classification
+import org.apache.spark.ml.clustering
 import org.apache.spark.ml.linalg.Vectors
-import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
+import org.apache.spark.ml.regression
 import org.scalatest.{FlatSpec, Matchers}
 
 class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
@@ -150,15 +150,17 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
   }
 
   def getClassificationTrainer() = {
-    new SparkTrainer[LogisticRegression, LogisticRegressionModel](new LogisticRegression())(spark)
+    new SparkTrainer[classification.LogisticRegression, classification.LogisticRegressionModel](
+      new classification.LogisticRegression())(spark)
   }
 
   def getRegressionTrainer() = {
-    new SparkTrainer[LinearRegression, LinearRegressionModel](new LinearRegression())(spark)
+    new SparkTrainer[regression.LinearRegression, regression.LinearRegressionModel](
+      new regression.LinearRegression())(spark)
   }
 
   def getClusteringTrainer() = {
-    new SparkTrainer[KMeans, KMeansModel](new KMeans())(spark)
+    new SparkTrainer[clustering.KMeans, clustering.KMeansModel](new clustering.KMeans())(spark)
   }
 
 }

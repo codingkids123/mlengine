@@ -2,8 +2,8 @@ package com.lz.mlengine
 
 import scala.collection.mutable.{Map => MutableMap}
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import org.apache.spark.ml.classification.{LogisticRegression, LogisticRegressionModel}
-import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
+import org.apache.spark.ml.classification
+import org.apache.spark.ml.regression
 import org.junit.Assert._
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +22,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
   def temporaryFolder = _temporaryFolder
 
   @Test def testSaveAndLoadClassificationModel() = {
-    val lr = new LogisticRegression()
+    val lr = new classification.LogisticRegression()
     lr.setMaxIter(10).setRegParam(0.01)
 
     val features = Seq(
@@ -37,7 +37,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
       PredictionSet("3", Map("negative" -> 1.0))
     ).toDS
 
-    val trainer = new SparkTrainer[LogisticRegression, LogisticRegressionModel](lr)
+    val trainer = new SparkTrainer[classification.LogisticRegression, classification.LogisticRegressionModel](lr)
     val modelToSave = trainer.fit(features, Some(labels))
 
     val path = s"${temporaryFolder.getRoot.getPath}/classification_model"
@@ -59,7 +59,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
   }
 
   @Test def testSaveAndLoadRegressionModel() = {
-    val lr = new LinearRegression()
+    val lr = new regression.LinearRegression()
     lr.setMaxIter(10).setRegParam(0.01)
 
     val features = Seq(
@@ -74,7 +74,7 @@ class SparkLoaderTest extends JUnitSuite with DatasetSuiteBase {
       PredictionSet("3", Map("value" -> 0.2))
     ).toDS
 
-    val trainer = new SparkTrainer[LinearRegression, LinearRegressionModel](lr)
+    val trainer = new SparkTrainer[regression.LinearRegression, regression.LinearRegressionModel](lr)
     val modelToSave = trainer.fit(features, Some(labels))
 
     val path = s"${temporaryFolder.getRoot.getPath}/regression_model"
