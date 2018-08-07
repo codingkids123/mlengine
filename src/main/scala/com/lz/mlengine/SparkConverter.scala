@@ -5,6 +5,7 @@ import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel
 import org.apache.spark.ml.classification.{LogisticRegressionModel => SparkLogisticRegressionModel}
 import org.apache.spark.ml.linalg.{DenseMatrix => SparkDenseMatrix}
 import org.apache.spark.ml.linalg.{DenseVector => SparkDenseVector}
+import org.apache.spark.ml.linalg.Matrices
 import org.apache.spark.ml.linalg.{Matrix => SparkMatrix}
 import org.apache.spark.ml.linalg.{SparseMatrix => SparkSparseMatrix}
 import org.apache.spark.ml.linalg.{SparseVector => SparkSparseVector}
@@ -22,7 +23,13 @@ object SparkConverter {
         m.foreachActive((row, col, value) => builder.add(row, col, value))
         builder.result
     }
+  }
 
+  implicit def convert(matrix: Matrix[Double]): SparkMatrix = {
+    matrix match {
+      case m: DenseMatrix[Double] => Matrices.dense(m.rows, m.cols, m.toArray)
+      case m: CSCMatrix[Double] => Matrices.sparse(m.rows, m.cols, m.colPtrs, m.rowIndices, m.data)
+    }
   }
 
   implicit def convert(vector: SparkVector): Vector[Double] = {

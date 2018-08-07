@@ -2,14 +2,14 @@ package com.lz.mlengine
 
 import breeze.linalg._
 
-class LogisticRegressionModel(val coefficientMatrix: Matrix[Double], val intercept: Vector[Double],
+class LogisticRegressionModel(val coefficients: Matrix[Double], val intercept: Vector[Double],
                               val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
                              ) extends MLModel(featureToIndexMap, Some(indexToLabelMap)) {
 
-  override def toString = s"${coefficientMatrix} ${intercept}"
+  override def toString = s"${coefficients} ${intercept}"
 
   def predictImpl(vector: Vector[Double]): Vector[Double] = {
-    val r = coefficientMatrix * vector + intercept
+    val r = coefficients * vector + intercept
     if (intercept.size == 1) {
       // Binary classification.
       new DenseVector(Array(1.0 / (1.0 + math.exp(r(0))), 1.0 / (1.0 + math.exp(-r(0)))))
