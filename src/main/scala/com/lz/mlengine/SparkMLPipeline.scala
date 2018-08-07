@@ -28,16 +28,9 @@ object SparkMLPipeline {
   val K_MEANS = "KMeans"
   val GAUSSIAN_MIXTURE = "GaussianMixture"
 
-  val CLASSIFICATION_MODELS = Seq(
-    DECISION_TREE, GBT_CLASSIFIER, LINEAR_SVC, LOGISTIC_REGRESSION, NAIVE_BAYES, RANDOM_FOREST_CLASSIFIER
-  )
-  val REGRESSION_MODELS = Seq(
-    DECISION_TREE_REGRESSOR, GBT_REGRESSOR, GENERALIZED_LINEAR_REGRESSION, ISOTONIC_REGRESSION,
-    LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR
-  )
-  val CLUSTERING_MODELS = Seq(
-    K_MEANS, GAUSSIAN_MIXTURE
-  )
+  val CLASSIFICATION_MODELS = Seq(LOGISTIC_REGRESSION)
+  val REGRESSION_MODELS = Seq(LINEAR_REGRESSION)
+  val CLUSTERING_MODELS = Seq()
 
   val MODE_TRAIN = "train"
   val MODE_PREDICT = "predict"
@@ -45,7 +38,7 @@ object SparkMLPipeline {
   def main(args: Array[String]): Unit = {
     if (args.length < 4) {
       println(
-        "Wrong number of args! Correct args: <mode> <model type> <model path> <feature path> [<label | prediction path>]"
+        "Wrong number of args! Correct args: <mode> <model type> <model path> <feature path> [<label|prediction path>]"
       )
       return
     }
@@ -148,28 +141,14 @@ object SparkMLPipeline {
     }
   }
 
-  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):SparkModel[_] = {
+  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):MLModel = {
     modelName match {
+      // TODO: Add more model support.
       // Classification models.
-      case DECISION_TREE => SparkLoader.decisionTreeClassificationModel(modelPath)
-      case GBT_CLASSIFIER => SparkLoader.gBTClassificationModel(modelPath)
-      case LINEAR_SVC => SparkLoader.linearSVCModel(modelPath)
-      case LOGISTIC_REGRESSION => SparkLoader.logisticRegressionModel(modelPath)
-      case MULTILAYER_PERCEPTRON => SparkLoader.multilayerPerceptronClassificationModel(modelPath)
-      case NAIVE_BAYES => SparkLoader.naiveBayesModel(modelPath)
-      case RANDOM_FOREST_CLASSIFIER => SparkLoader.randomForestClassificationModel(modelPath)
+      case LOGISTIC_REGRESSION => LogisticRegressionModel.load(modelPath)
 
       // Regression models.
-      case DECISION_TREE_REGRESSOR => SparkLoader.decisionTreeRegressorModel(modelPath)
-      case GBT_REGRESSOR => SparkLoader.gBTRegressionModel(modelPath)
-      case GENERALIZED_LINEAR_REGRESSION => SparkLoader.generalizedLinearRegressionModel(modelPath)
-      case ISOTONIC_REGRESSION => SparkLoader.isotonicRegressionModel(modelPath)
-      case LINEAR_REGRESSION => SparkLoader.linearRegressionModel(modelPath)
-      case RANDOM_FOREST_REGRESSOR => SparkLoader.randomForestRegressionModel(modelPath)
-
-      // Clustering models.
-      case K_MEANS => SparkLoader.kMeansModel(modelPath)
-      case GAUSSIAN_MIXTURE => SparkLoader.gaussianMixtureModel(modelPath)
+      case LINEAR_REGRESSION => LinearRegressionModel.load(modelPath)
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
@@ -185,9 +164,10 @@ object SparkMLPipeline {
 
   def predict(modelName: String, modelPath: String, featurePath: String, predictionPath: String)
              (implicit spark: SparkSession): Unit = {
+    import spark.implicits._
     val model = getModel(modelName, modelPath)
     val features = loadFeatures(featurePath)
-    model.predict(features).write.format("json").save(predictionPath)
+    features.map(row => model.predict(row)).write.format("json").save(predictionPath)
   }
 
 }

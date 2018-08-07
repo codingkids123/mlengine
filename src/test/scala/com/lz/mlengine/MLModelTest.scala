@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import scala.collection.mutable.{Map => MutableMap}
+
 import breeze.linalg.DenseVector
 import breeze.linalg.Vector
 import org.junit.Assert._

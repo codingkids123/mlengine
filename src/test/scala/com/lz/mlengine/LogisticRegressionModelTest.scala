@@ -1,6 +1,5 @@
 package com.lz.mlengine
 
-import breeze.linalg.DenseVector
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.apache.spark.ml.classification
 import org.apache.spark.ml.linalg.Vectors

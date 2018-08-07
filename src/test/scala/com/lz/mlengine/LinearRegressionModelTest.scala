@@ -35,8 +35,8 @@ class LinearRegressionModelTest extends JUnitSuite with DatasetSuiteBase {
     SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
     val model = LinearRegressionModel.load(path)
 
-    val expected = sparkModel.transform(data).select("id", "prediction").as[SparkPredictionScalar]
-    val predictions = data.map(row => new SparkPredictionScalar(row.id, model.predictImpl(row.features)(0)))
+    val expected = sparkModel.transform(data).select("id", "prediction").as[SparkPrediction]
+    val predictions = data.map(row => new SparkPrediction(row.id, model.predictImpl(row.features)(0)))
 
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }

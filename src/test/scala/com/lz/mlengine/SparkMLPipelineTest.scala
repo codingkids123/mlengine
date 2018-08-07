@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import scala.collection.mutable.{Map => MutableMap}
+
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.junit.Assert._
 import org.junit.{Rule, Test}
@@ -33,7 +34,7 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     SparkMLPipeline.CLASSIFICATION_MODELS.foreach(model => {
       val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
       val labelPath = getClass.getClassLoader.getResource("sample_classification_labels.txt").getFile()
-      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}"
+      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}/model"
       val predictionPath = s"${temporaryFolder.getRoot.getPath}/${model}/predictions"
       SparkMLPipeline.train(model, modelPath, featurePath, labelPath)
       SparkMLPipeline.predict(model, modelPath, featurePath, predictionPath)
@@ -46,7 +47,7 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     SparkMLPipeline.REGRESSION_MODELS.foreach(model => {
       val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
       val labelPath = getClass.getClassLoader.getResource("sample_regression_labels.txt").getFile()
-      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}"
+      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}/model"
       val predictionPath = s"${temporaryFolder.getRoot.getPath}/${model}/predictions"
       SparkMLPipeline.train(model, modelPath, featurePath, labelPath)
       SparkMLPipeline.predict(model, modelPath, featurePath, predictionPath)
@@ -59,7 +60,7 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     SparkMLPipeline.CLUSTERING_MODELS.foreach(model => {
       val featurePath = getClass.getClassLoader.getResource("sample_features.json").getFile()
       val labelPath = ""
-      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}"
+      val modelPath = s"${temporaryFolder.getRoot.getPath}/${model}/model"
       val predictionPath = s"${temporaryFolder.getRoot.getPath}/${model}/predictions"
       SparkMLPipeline.train(model, modelPath, featurePath, labelPath)
       SparkMLPipeline.predict(model, modelPath, featurePath, predictionPath)
