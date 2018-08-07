@@ -46,8 +46,8 @@ object SparkMLPipeline {
     val modelType = args(1)
     val modelPath = args(2)
     val featurePath = args(3)
-    val predictionPath = if (args.length == 4) args(4) else ""
-    val labelPath = if (args.length == 4) args(4) else ""
+    val predictionPath = if (args.length == 5) args(4) else ""
+    val labelPath = if (args.length == 5) args(4) else ""
 
     implicit val spark = SparkSession
       .builder()

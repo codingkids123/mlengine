@@ -21,7 +21,7 @@ $SPARK_HOME/bin/spark-submit \
   --master local[4] \
   --class com.lz.mlengine.SparkMLPipeline target/mlengine-0.0.1.jar \
   predict LogisticRegression \
-  /tmp/lrmodel src/test/resources/sample_features.json /tmp/lrmodel/result
+  /tmp/lrmodel src/test/resources/sample_features.json /tmp/lrmodel_result
 ```
 
 
@@ -39,22 +39,5 @@ $SPARK_HOME/bin/spark-submit \
   --master local[4] \
   --class com.lz.mlengine.SparkMLPipeline target/mlengine-0.0.1.jar \
   predict LinearRegression \
-  /tmp/lrmodel src/test/resources/sample_features.json /tmp/lrmodel/result
-```
-
-Train a clustering model
-```
-# Train
-$SPARK_HOME/bin/spark-submit \
-  --master local[4] \
-  --class com.lz.mlengine.SparkMLPipeline target/mlengine-0.0.1.jar \
-  train KMeans \
-  /tmp/lrmodel src/test/resources/sample_features.json 
-
-# Predict
-$SPARK_HOME/bin/spark-submit \
-  --master local[4] \
-  --class com.lz.mlengine.SparkMLPipeline target/mlengine-0.0.1.jar \
-  predict KMeans \
-  /tmp/lrmodel src/test/resources/sample_features.json /tmp/lrmodel/result
+  /tmp/lrmodel src/test/resources/sample_features.json /tmp/lrmodel_result
 ```
