@@ -23,9 +23,9 @@ class SparkMLPipelineTest extends JUnitSuite with DatasetSuiteBase {
     val path = getClass.getClassLoader.getResource("sample_features.json").getFile()
     val features = SparkMLPipeline.loadFeatures(path)
     val expected = Seq(
-      FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 0.0)),
-      FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 0.0)),
-      FeatureSet("3", MutableMap("feature1" -> 1.0, "feature3" -> 0.0))
+      FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
+      FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
+      FeatureSet("3", MutableMap("feature1" -> 1.0, "feature3" -> 1.0))
     ).toDS
     assertDatasetEquals(expected, features)
   }

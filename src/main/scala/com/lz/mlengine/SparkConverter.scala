@@ -1,6 +1,7 @@
 package com.lz.mlengine
 
 import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, VectorBuilder}
+import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel}
 import org.apache.spark.ml.classification.{LogisticRegressionModel => SparkLogisticRegressionModel}
 import org.apache.spark.ml.linalg.{DenseMatrix => SparkDenseMatrix}
 import org.apache.spark.ml.linalg.{DenseVector => SparkDenseVector}
@@ -39,6 +40,11 @@ object SparkConverter {
       case v: DenseVector[Double] =>  Vectors.dense(v.toArray)
       case v: SparseVector[Double] => Vectors.sparse(v.array.size, v.array.index, v.array.data)
     }
+  }
+
+  implicit def convert(model: SparkLinearSVCModel)
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+    new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
   }
 
   implicit def convert(model: SparkLogisticRegressionModel)
