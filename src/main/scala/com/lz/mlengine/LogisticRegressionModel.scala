@@ -31,6 +31,4 @@ class LogisticRegressionModel(val coefficientMatrix: Matrix[Double], val interce
 
 }
 
-object LogisticRegressionModel extends MLModelLoader[LogisticRegressionModel] {
-
-}
+object LogisticRegressionModel extends MLModelLoader[LogisticRegressionModel]

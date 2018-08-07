@@ -106,11 +106,10 @@ object SparkTrainer {
 
   def fit[M <: Model[M]](trainer: Estimator[M], features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]])
                         (implicit spark: SparkSession): MLModel = {
-    val featureToIndexMap = getFeatureToIndexMap(features)
-
+    implicit val featureToIndexMap = getFeatureToIndexMap(features)
     trainer match {
       case _: classification.LogisticRegression | _: classification.DecisionTreeClassifier => {
-        implicit val labelToIndexMap = getLabelToIndexMap(labels.get)
+        val labelToIndexMap = getLabelToIndexMap(labels.get)
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
         implicit val indexToLabelMap = labelToIndexMap.map(_.swap)
         trainer match {
@@ -119,9 +118,15 @@ object SparkTrainer {
           }
         }
       }
-      // case _: regression.LinearRegression
+      case _: regression.LinearRegression => {
+        val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
+        trainer match {
+          case _: regression.LinearRegression => {
+            trainer.fit(labeledVectors).asInstanceOf[regression.LinearRegressionModel]
+          }
+        }
+      }
     }
-
   }
 
   private[mlengine] def getFeatureToIndexMap(features: Dataset[FeatureSet])
