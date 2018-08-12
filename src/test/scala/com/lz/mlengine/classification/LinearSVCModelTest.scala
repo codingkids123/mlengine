@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.classification
 
-import org.apache.spark.ml.classification
+import com.lz.mlengine.{SparkConverter, SparkModelTest}
+import org.apache.spark.ml.{classification => cl}
 import org.junit.Test
 
 class LinearSVCModelTest extends SparkModelTest {
@@ -12,11 +13,11 @@ class LinearSVCModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
     val model = LinearSVCModel.load(path)
 
-    assertBinaryClassificationModelRawSame[classification.LinearSVCModel](binaryClassificationData, sparkModel, model)
+    assertBinaryClassificationModelRawSame[cl.LinearSVCModel](binaryClassificationData, sparkModel, model)
   }
 
   def getTrainer() = {
-    new classification.LinearSVC()
+    new cl.LinearSVC()
       .setMaxIter(10)
       .setRegParam(0.1)
   }

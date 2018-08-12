@@ -1,10 +1,10 @@
 package com.lz.mlengine
 
-import org.apache.spark.ml.classification
+import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.linalg.Vectors
-import org.apache.spark.ml.regression
+import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.{Dataset, SparkSession}
 
@@ -26,28 +26,31 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
   def fit(features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]]): MLModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     trainer match {
-      case _: classification.DecisionTreeClassifier | _: classification.LinearSVC |
-           _: classification.LogisticRegression => {
+      case _: cl.DecisionTreeClassifier | _: cl.LinearSVC |
+           _: cl.LogisticRegression => {
         val labelToIndexMap = getLabelToIndexMap(labels.get)
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
         implicit val indexToLabelMap = labelToIndexMap.map(_.swap)
         trainer match {
-          case _: classification.DecisionTreeClassifier => {
-            trainer.fit(labeledVectors).asInstanceOf[classification.DecisionTreeClassificationModel]
+          case _: cl.DecisionTreeClassifier => {
+            trainer.fit(labeledVectors).asInstanceOf[cl.DecisionTreeClassificationModel]
           }
-          case _: classification.LinearSVC => {
-            trainer.fit(labeledVectors).asInstanceOf[classification.LinearSVCModel]
+          case _: cl.LinearSVC => {
+            trainer.fit(labeledVectors).asInstanceOf[cl.LinearSVCModel]
           }
-          case _: classification.LogisticRegression => {
-            trainer.fit(labeledVectors).asInstanceOf[classification.LogisticRegressionModel]
+          case _: cl.LogisticRegression => {
+            trainer.fit(labeledVectors).asInstanceOf[cl.LogisticRegressionModel]
           }
         }
       }
-      case _: regression.LinearRegression => {
+      case _: rg.DecisionTreeRegressor | _: rg.LinearRegression => {
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
         trainer match {
-          case _: regression.LinearRegression => {
-            trainer.fit(labeledVectors).asInstanceOf[regression.LinearRegressionModel]
+          case _: rg.DecisionTreeRegressor => {
+            trainer.fit(labeledVectors).asInstanceOf[rg.DecisionTreeRegressionModel]
+          }
+          case _: rg.LinearRegression => {
+            trainer.fit(labeledVectors).asInstanceOf[rg.LinearRegressionModel]
           }
         }
       }

@@ -1,14 +1,14 @@
 package com.lz.mlengine
 
-import org.apache.spark.ml.classification
-import org.apache.spark.ml.clustering
-import org.apache.spark.ml.regression
+import org.apache.spark.ml.{classification => cl}
+import org.apache.spark.ml.{clustering => cs}
+import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 object SparkMLPipeline {
 
   // Classification.
-  val DECISION_TREE = "DecisionTreeClassifier"
+  val DECISION_TREE_CLASSIFIER = "DecisionTreeClassifier"
   val GBT_CLASSIFIER = "GBTClassifier"
   val LINEAR_SVC = "LinearSVC"
   val LOGISTIC_REGRESSION = "LogisticRegression"
@@ -28,8 +28,8 @@ object SparkMLPipeline {
   val K_MEANS = "KMeans"
   val GAUSSIAN_MIXTURE = "GaussianMixture"
 
-  val CLASSIFICATION_MODELS = Seq(DECISION_TREE, LOGISTIC_REGRESSION, LINEAR_SVC)
-  val REGRESSION_MODELS = Seq(LINEAR_REGRESSION)
+  val CLASSIFICATION_MODELS = Seq(DECISION_TREE_CLASSIFIER, LOGISTIC_REGRESSION, LINEAR_SVC)
+  val REGRESSION_MODELS = Seq(DECISION_TREE_REGRESSOR, LINEAR_REGRESSION)
   val CLUSTERING_MODELS = Seq()
 
   val MODE_TRAIN = "train"
@@ -90,52 +90,42 @@ object SparkMLPipeline {
   def getTrainer(modelName: String)(implicit spark: SparkSession):SparkTrainer[_, _] = {
     modelName match {
       // Classification models.
-      case DECISION_TREE =>
-        new SparkTrainer[classification.DecisionTreeClassifier, classification.DecisionTreeClassificationModel](
-          new classification.DecisionTreeClassifier())
+      case DECISION_TREE_CLASSIFIER =>
+        new SparkTrainer[cl.DecisionTreeClassifier, cl.DecisionTreeClassificationModel](new cl.DecisionTreeClassifier())
       case GBT_CLASSIFIER =>
-        new SparkTrainer[classification.GBTClassifier, classification.GBTClassificationModel](
-          new classification.GBTClassifier())
+        new SparkTrainer[cl.GBTClassifier, cl.GBTClassificationModel](new cl.GBTClassifier())
       case LINEAR_SVC =>
-        new SparkTrainer[classification.LinearSVC, classification.LinearSVCModel](new classification.LinearSVC())
+        new SparkTrainer[cl.LinearSVC, cl.LinearSVCModel](new cl.LinearSVC())
       case LOGISTIC_REGRESSION =>
-        new SparkTrainer[classification.LogisticRegression, classification.LogisticRegressionModel](
-          new classification.LogisticRegression())
+        new SparkTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())
       case MULTILAYER_PERCEPTRON =>
-        new SparkTrainer[classification.MultilayerPerceptronClassifier,
-                         classification.MultilayerPerceptronClassificationModel](
-          new classification.MultilayerPerceptronClassifier())
+        new SparkTrainer[cl.MultilayerPerceptronClassifier, cl.MultilayerPerceptronClassificationModel](
+          new cl.MultilayerPerceptronClassifier())
       case NAIVE_BAYES =>
-        new SparkTrainer[classification.NaiveBayes, classification.NaiveBayesModel](new classification.NaiveBayes())
+        new SparkTrainer[cl.NaiveBayes, cl.NaiveBayesModel](new cl.NaiveBayes())
       case RANDOM_FOREST_CLASSIFIER =>
-        new SparkTrainer[classification.RandomForestClassifier, classification.RandomForestClassificationModel](
-          new classification.RandomForestClassifier())
+        new SparkTrainer[cl.RandomForestClassifier, cl.RandomForestClassificationModel](new cl.RandomForestClassifier())
 
       // Regression models.
       case DECISION_TREE_REGRESSOR =>
-        new SparkTrainer[regression.DecisionTreeRegressor, regression.DecisionTreeRegressionModel](
-          new regression.DecisionTreeRegressor())
+        new SparkTrainer[rg.DecisionTreeRegressor, rg.DecisionTreeRegressionModel](new rg.DecisionTreeRegressor())
       case GBT_REGRESSOR =>
-        new SparkTrainer[regression.GBTRegressor, regression.GBTRegressionModel](
-          new regression.GBTRegressor())
+        new SparkTrainer[rg.GBTRegressor, rg.GBTRegressionModel](new rg.GBTRegressor())
       case GENERALIZED_LINEAR_REGRESSION =>
-        new SparkTrainer[regression.GeneralizedLinearRegression, regression.GeneralizedLinearRegressionModel](
-          new regression.GeneralizedLinearRegression())
+        new SparkTrainer[rg.GeneralizedLinearRegression, rg.GeneralizedLinearRegressionModel](
+          new rg.GeneralizedLinearRegression())
       case ISOTONIC_REGRESSION =>
-        new SparkTrainer[regression.IsotonicRegression, regression.IsotonicRegressionModel](
-          new regression.IsotonicRegression())
+        new SparkTrainer[rg.IsotonicRegression, rg.IsotonicRegressionModel](new rg.IsotonicRegression())
       case LINEAR_REGRESSION =>
-        new SparkTrainer[regression.LinearRegression, regression.LinearRegressionModel](
-          new regression.LinearRegression())
+        new SparkTrainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())
       case RANDOM_FOREST_REGRESSOR =>
-        new SparkTrainer[regression.RandomForestRegressor, regression.RandomForestRegressionModel](
-          new regression.RandomForestRegressor())
+        new SparkTrainer[rg.RandomForestRegressor, rg.RandomForestRegressionModel](new rg.RandomForestRegressor())
 
       // Clustering models.
       case K_MEANS =>
-        new SparkTrainer[clustering.KMeans, clustering.KMeansModel](new clustering.KMeans())
+        new SparkTrainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())
       case GAUSSIAN_MIXTURE =>
-        new SparkTrainer[clustering.GaussianMixture, clustering.GaussianMixtureModel](new clustering.GaussianMixture())
+        new SparkTrainer[cs.GaussianMixture, cs.GaussianMixtureModel](new cs.GaussianMixture())
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
@@ -145,12 +135,13 @@ object SparkMLPipeline {
     modelName match {
       // TODO: Add more model support.
       // Classification models.
-      case DECISION_TREE => DecisionTreeClassificationModel.load(modelPath)
-      case LINEAR_SVC => LinearSVCModel.load(modelPath)
-      case LOGISTIC_REGRESSION => LogisticRegressionModel.load(modelPath)
+      case DECISION_TREE_CLASSIFIER => classification.DecisionTreeClassificationModel.load(modelPath)
+      case LINEAR_SVC => classification.LinearSVCModel.load(modelPath)
+      case LOGISTIC_REGRESSION => classification.LogisticRegressionModel.load(modelPath)
 
       // Regression models.
-      case LINEAR_REGRESSION => LinearRegressionModel.load(modelPath)
+      case LINEAR_REGRESSION => regression.LinearRegressionModel.load(modelPath)
+      case DECISION_TREE_REGRESSOR => regression.DecisionTreeRegressionModel.load(modelPath)
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }

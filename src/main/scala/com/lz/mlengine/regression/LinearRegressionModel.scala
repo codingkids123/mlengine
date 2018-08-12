@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.regression
 
 import breeze.linalg._
+import com.lz.mlengine.{MLModel, MLModelLoader}
 
 class LinearRegressionModel(val coefficients: Vector[Double], val intercept: Double, val scale: Double,
                             val featureToIndexMap: Map[String, Int]

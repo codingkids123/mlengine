@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.classification
 
-import org.apache.spark.ml.classification
+import com.lz.mlengine.{SparkConverter, SparkModelTest}
+import org.apache.spark.ml.{classification => cl}
 import org.junit.Test
 
 class LogisticRegressionModelTest extends SparkModelTest {
@@ -12,7 +13,7 @@ class LogisticRegressionModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
     val model = LogisticRegressionModel.load(path)
 
-    assertBinaryClassificationModelProbabilitySame[classification.LogisticRegressionModel](
+    assertBinaryClassificationModelProbabilitySame[cl.LogisticRegressionModel](
       binaryClassificationData, sparkModel, model
     )
   }
@@ -24,13 +25,13 @@ class LogisticRegressionModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
     val model = LogisticRegressionModel.load(path)
 
-    assertMultiClassificationModelProbabilitySame[classification.LogisticRegressionModel](
+    assertMultiClassificationModelProbabilitySame[cl.LogisticRegressionModel](
       multiClassificationData, sparkModel, model
     )
   }
 
   def getTrainer = {
-    new classification.LogisticRegression()
+    new cl.LogisticRegression()
       .setMaxIter(10)
       .setRegParam(0.1)
   }

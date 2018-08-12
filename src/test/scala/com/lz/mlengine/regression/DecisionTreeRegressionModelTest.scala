@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.regression
 
-import org.apache.spark.ml.regression
+import com.lz.mlengine.{SparkConverter, SparkModelTest}
+import org.apache.spark.ml.{regression => rg}
 import org.junit.Test
 
 class DecisionTreeRegressionModelTest extends SparkModelTest {
@@ -12,11 +13,11 @@ class DecisionTreeRegressionModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
     val model = DecisionTreeRegressionModel.load(path)
 
-    assertRegressionModelSame[regression.DecisionTreeRegressionModel](regressionData, sparkModel, model)
+    assertRegressionModelSame[rg.DecisionTreeRegressionModel](regressionData, sparkModel, model)
   }
 
   def getTrainer = {
-    new regression.DecisionTreeRegressor()
+    new rg.DecisionTreeRegressor()
       .setMaxDepth(4)
   }
 

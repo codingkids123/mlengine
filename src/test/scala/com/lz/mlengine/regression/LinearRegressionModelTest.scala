@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.regression
 
-import org.apache.spark.ml.regression
+import com.lz.mlengine.{SparkConverter, SparkModelTest}
+import org.apache.spark.ml.{regression => rg}
 import org.junit.Test
 
 class LinearRegressionModelTest extends SparkModelTest {
@@ -12,11 +13,11 @@ class LinearRegressionModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
     val model = LinearRegressionModel.load(path)
 
-    assertRegressionModelSame[regression.LinearRegressionModel](regressionData, sparkModel, model)
+    assertRegressionModelSame[rg.LinearRegressionModel](regressionData, sparkModel, model)
   }
 
   def getTrainer = {
-    new regression.LinearRegression()
+    new rg.LinearRegression()
       .setMaxIter(10)
       .setRegParam(0.1)
   }

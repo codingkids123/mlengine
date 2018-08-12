@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.classification
 
 import breeze.linalg.{DenseVector, Vector}
+import com.lz.mlengine.{MLModel, MLModelLoader}
 
 class LinearSVCModel(val coefficients: Vector[Double], val intercept: Double,
                      val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]

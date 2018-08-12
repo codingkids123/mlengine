@@ -1,6 +1,7 @@
-package com.lz.mlengine
+package com.lz.mlengine.classification
 
-import org.apache.spark.ml.classification
+import com.lz.mlengine.{SparkConverter, SparkModelTest}
+import org.apache.spark.ml.{classification => cl}
 import org.junit.Test
 
 class DecisionTreeClassificationModelTest extends SparkModelTest {
@@ -12,7 +13,7 @@ class DecisionTreeClassificationModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
     val model = DecisionTreeClassificationModel.load(path)
 
-    assertBinaryClassificationModelProbabilitySame[classification.DecisionTreeClassificationModel](
+    assertBinaryClassificationModelProbabilitySame[cl.DecisionTreeClassificationModel](
       binaryClassificationData, sparkModel, model
     )
   }
@@ -24,13 +25,13 @@ class DecisionTreeClassificationModelTest extends SparkModelTest {
     SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
     val model = DecisionTreeClassificationModel.load(path)
 
-    assertMultiClassificationModelProbabilitySame[classification.DecisionTreeClassificationModel](
+    assertMultiClassificationModelProbabilitySame[cl.DecisionTreeClassificationModel](
       multiClassificationData, sparkModel, model
     )
   }
 
   def getTrainer = {
-    new classification.DecisionTreeClassifier()
+    new cl.DecisionTreeClassifier()
       .setMaxDepth(4)
   }
 
