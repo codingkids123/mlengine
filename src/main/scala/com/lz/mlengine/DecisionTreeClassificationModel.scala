@@ -7,7 +7,7 @@ class DecisionTreeClassificationModel(val rootNode: Node, val featureToIndexMap:
                                       val indexToLabelMap: Map[Int, String]
                                      ) extends MLModel(featureToIndexMap, Some(indexToLabelMap)) {
 
-  override private[mlengine] def predictImpl(vector: Vector[Double]) = {
+  override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = {
     val prediction = rootNode.predictImpl(vector).impurityStats
     prediction / sum(prediction)
   }
@@ -15,5 +15,3 @@ class DecisionTreeClassificationModel(val rootNode: Node, val featureToIndexMap:
 }
 
 object DecisionTreeClassificationModel extends MLModelLoader[DecisionTreeClassificationModel]
-
-

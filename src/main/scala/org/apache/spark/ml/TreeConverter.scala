@@ -29,10 +29,12 @@ object TreeConverter {
           convertDecisionTree(n.leftChild),
           convertDecisionTree(n.rightChild),
           n.split,
+          n.prediction,
+          n.impurity,
           n.impurityStats
         )
       case n: SparkLeafNode =>
-        new LeafNode(n.prediction, n.prediction, n.impurityStats)
+        new LeafNode(n.prediction, n.impurity, n.impurityStats)
     }
   }
 

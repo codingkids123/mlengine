@@ -6,9 +6,7 @@ class LinearRegressionModel(val coefficients: Vector[Double], val intercept: Dou
                             val featureToIndexMap: Map[String, Int]
                            ) extends MLModel(featureToIndexMap, None) {
 
-  override def toString = s"${coefficients} ${intercept}"
-
-  def predictImpl(vector: Vector[Double]): Vector[Double] = {
+  override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = {
     DenseVector((coefficients dot vector) + intercept)
   }
 

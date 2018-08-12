@@ -6,11 +6,14 @@ trait Node extends Serializable {
 
   val impurityStats: Vector[Double]
 
+  val prediction: Double
+
   def predictImpl(feature: Vector[Double]): Node
 
 }
 
-class InternalNode(val left: Node, val right: Node, val split: Split, val impurityStats: Vector[Double]) extends Node {
+class InternalNode(val left: Node, val right: Node, val split: Split, val prediction: Double, val impurity: Double,
+                   val impurityStats: Vector[Double]) extends Node {
 
   def predictImpl(feature: Vector[Double]): Node = {
     if (split.shouldGoLeft(feature)) {

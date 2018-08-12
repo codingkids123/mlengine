@@ -13,6 +13,7 @@ import org.apache.spark.ml.linalg.{SparseVector => SparkSparseVector}
 import org.apache.spark.ml.linalg.{Vector => SparkVector}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.regression.{LinearRegressionModel => SparkLinearRegressionModel}
+import org.apache.spark.ml.regression.{DecisionTreeRegressionModel => SparkDecisionTreeRegressionModel}
 
 object SparkConverter {
 
@@ -61,13 +62,20 @@ object SparkConverter {
     new LogisticRegressionModel(model.coefficientMatrix, model.interceptVector, featureToIndexMap, indexToLabelMap)
   }
 
+  implicit def convert(model: SparkLinearSVCModel)
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+    new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
+  }
+
+  implicit def convert(model: SparkDecisionTreeRegressionModel)
+                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+    val rootNode = TreeConverter.convertDecisionTree(model.rootNode)
+    new DecisionTreeRegressionModel(rootNode, featureToIndexMap)
+  }
+
   implicit def convert(model: SparkLinearRegressionModel)
                       (implicit featureToIndexMap: Map[String, Int]): MLModel = {
     new LinearRegressionModel(model.coefficients, model.intercept, model.scale, featureToIndexMap)
   }
 
-  implicit def convert(model: SparkLinearSVCModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
-    new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
-  }
 }

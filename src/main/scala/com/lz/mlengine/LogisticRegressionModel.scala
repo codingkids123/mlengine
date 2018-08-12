@@ -6,9 +6,7 @@ class LogisticRegressionModel(val coefficients: Matrix[Double], val intercept: V
                               val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
                              ) extends MLModel(featureToIndexMap, Some(indexToLabelMap)) {
 
-  override def toString = s"${coefficients} ${intercept}"
-
-  def predictImpl(vector: Vector[Double]): Vector[Double] = {
+  override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = {
     val r = coefficients * vector + intercept
     if (intercept.size == 1) {
       // Binary classification.
