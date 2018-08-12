@@ -1,8 +1,9 @@
 package com.lz.mlengine
 
 import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, VectorBuilder}
-import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel}
-import org.apache.spark.ml.classification.{LogisticRegressionModel => SparkLogisticRegressionModel}
+import org.apache.spark.ml.TreeConverter
+import org.apache.spark.ml.classification.{DecisionTreeClassificationModel => SparkDecisionTreeClassificationModel}
+import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel, LogisticRegressionModel => SparkLogisticRegressionModel}
 import org.apache.spark.ml.linalg.{DenseMatrix => SparkDenseMatrix}
 import org.apache.spark.ml.linalg.{DenseVector => SparkDenseVector}
 import org.apache.spark.ml.linalg.Matrices
@@ -49,9 +50,10 @@ object SparkConverter {
     }
   }
 
-  implicit def convert(model: SparkLinearSVCModel)
+  implicit def convert(model: SparkDecisionTreeClassificationModel)
                       (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
-    new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
+    val rootNode = TreeConverter.convertDecisionTree(model.rootNode)
+    new DecisionTreeClassificationModel(rootNode, featureToIndexMap, indexToLabelMap)
   }
 
   implicit def convert(model: SparkLogisticRegressionModel)
@@ -64,4 +66,8 @@ object SparkConverter {
     new LinearRegressionModel(model.coefficients, model.intercept, model.scale, featureToIndexMap)
   }
 
+  implicit def convert(model: SparkLinearSVCModel)
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+    new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
+  }
 }

@@ -28,7 +28,7 @@ object SparkMLPipeline {
   val K_MEANS = "KMeans"
   val GAUSSIAN_MIXTURE = "GaussianMixture"
 
-  val CLASSIFICATION_MODELS = Seq(LOGISTIC_REGRESSION)
+  val CLASSIFICATION_MODELS = Seq(DECISION_TREE, LOGISTIC_REGRESSION, LINEAR_SVC)
   val REGRESSION_MODELS = Seq(LINEAR_REGRESSION)
   val CLUSTERING_MODELS = Seq()
 
@@ -145,6 +145,8 @@ object SparkMLPipeline {
     modelName match {
       // TODO: Add more model support.
       // Classification models.
+      case DECISION_TREE => DecisionTreeClassificationModel.load(modelPath)
+      case LINEAR_SVC => LinearSVCModel.load(modelPath)
       case LOGISTIC_REGRESSION => LogisticRegressionModel.load(modelPath)
 
       // Regression models.

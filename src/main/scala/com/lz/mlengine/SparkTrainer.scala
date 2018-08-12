@@ -26,11 +26,18 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
   def fit(features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]]): MLModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     trainer match {
-      case _: classification.LogisticRegression | _: classification.DecisionTreeClassifier => {
+      case _: classification.DecisionTreeClassifier | _: classification.LinearSVC |
+           _: classification.LogisticRegression => {
         val labelToIndexMap = getLabelToIndexMap(labels.get)
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
         implicit val indexToLabelMap = labelToIndexMap.map(_.swap)
         trainer match {
+          case _: classification.DecisionTreeClassifier => {
+            trainer.fit(labeledVectors).asInstanceOf[classification.DecisionTreeClassificationModel]
+          }
+          case _: classification.LinearSVC => {
+            trainer.fit(labeledVectors).asInstanceOf[classification.LinearSVCModel]
+          }
           case _: classification.LogisticRegression => {
             trainer.fit(labeledVectors).asInstanceOf[classification.LogisticRegressionModel]
           }
