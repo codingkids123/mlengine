@@ -8,12 +8,12 @@ class LinearSVCModelTest extends SparkModelTest {
 
   @Test def testBinaryClassification() = {
     val sparkModel = getTrainer.fit(binaryClassificationData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/linear_svc"
-    SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
-    val model = LinearSVCModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, LinearSVCModel.load)
 
-    assertBinaryClassificationModelRawSame[cl.LinearSVCModel](binaryClassificationData, sparkModel, model)
+    assertBinaryClassificationModelRawSame[cl.LinearSVCModel](binaryClassificationData, sparkModel, modelLoaded)
   }
 
   def getTrainer() = {

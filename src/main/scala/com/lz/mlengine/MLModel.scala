@@ -1,11 +1,8 @@
 package com.lz.mlengine
 
-import java.io.{ObjectInputStream, ObjectOutputStream}
-import java.net.URI
+import java.io._
 
 import breeze.linalg.{Vector, VectorBuilder}
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 
 abstract class MLModel(featureToIndexMap: Map[String, Int], indexToLabelMapMaybe: Option[Map[Int, String]]
                       ) extends Serializable {
@@ -18,22 +15,12 @@ abstract class MLModel(featureToIndexMap: Map[String, Int], indexToLabelMapMaybe
     convertVectorToPredictionSet(feature.id, prediction)
   }
 
-  def save(path: String, overwrite: Boolean = false): Unit = {
-    val configuration = new Configuration()
-    val fs = FileSystem.get(new URI(path), configuration)
-    val file = new Path(path)
+  def save(outputStream: OutputStream) = {
+    val objectOutputStream = new ObjectOutputStream(outputStream)
     try {
-      if (overwrite && fs.exists(file)) fs.delete(file, false)
-      val fsdos = fs.create(file)
-      val oos = new ObjectOutputStream(fsdos)
-      try {
-        oos.writeObject(this)
-      } finally {
-        oos.close
-        fsdos.close
-      }
+      objectOutputStream.writeObject(this)
     } finally {
-      fs.close
+      objectOutputStream.close
     }
   }
 
@@ -67,21 +54,14 @@ abstract class MLModel(featureToIndexMap: Map[String, Int], indexToLabelMapMaybe
 }
 
 trait MLModelLoader[M] {
-  def load(path: String): M = {
-    val configuration = new Configuration()
-    val fs = FileSystem.get(new URI(path), configuration)
-    val file = new Path(path)
+
+  def load(inputStream: InputStream): M = {
+    val objectInputStream = new ObjectInputStream(inputStream)
     try {
-      val fsdis = fs.open(file)
-      val ois = new ObjectInputStream(fsdis)
-      try {
-        return ois.readObject.asInstanceOf[M]
-      } finally {
-        ois.close
-        fsdis.close
-      }
+      return objectInputStream.readObject.asInstanceOf[M]
     } finally {
-      fs.close
+      objectInputStream.close()
     }
   }
+
 }

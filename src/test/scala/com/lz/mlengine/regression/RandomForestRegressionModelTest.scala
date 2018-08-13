@@ -8,12 +8,12 @@ class RandomForestRegressionModelTest extends SparkModelTest {
 
   @Test def testRegression() = {
     val sparkModel = getTrainer.fit(regressionData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/random_forest_regression"
-    SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
-    val model = RandomForestRegressionModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, RandomForestRegressionModel.load)
 
-    assertRegressionModelSame[rg.RandomForestRegressionModel](regressionData, sparkModel, model)
+    assertRegressionModelSame[rg.RandomForestRegressionModel](regressionData, sparkModel, modelLoaded)
   }
 
   def getTrainer = {

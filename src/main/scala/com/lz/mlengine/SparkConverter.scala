@@ -1,8 +1,6 @@
 package com.lz.mlengine
 
 import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, VectorBuilder}
-import com.lz.mlengine.classification.{DecisionTreeClassificationModel, LinearSVCModel, LogisticRegressionModel, RandomForestClassificationModel}
-import com.lz.mlengine.regression.{DecisionTreeRegressionModel, LinearRegressionModel, RandomForestRegressionModel}
 import org.apache.spark.ml.TreeConverter
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel => SparkDecisionTreeClassificationModel}
 import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel, LogisticRegressionModel => SparkLogisticRegressionModel}
@@ -18,6 +16,9 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.regression.{LinearRegressionModel => SparkLinearRegressionModel}
 import org.apache.spark.ml.regression.{DecisionTreeRegressionModel => SparkDecisionTreeRegressionModel}
 import org.apache.spark.ml.regression.{RandomForestRegressionModel => SparkRandomForestRegressionModel}
+
+import com.lz.mlengine.classification.{DecisionTreeClassificationModel, LinearSVCModel, LogisticRegressionModel, RandomForestClassificationModel}
+import com.lz.mlengine.regression.{DecisionTreeRegressionModel, LinearRegressionModel, RandomForestRegressionModel}
 
 object SparkConverter {
 

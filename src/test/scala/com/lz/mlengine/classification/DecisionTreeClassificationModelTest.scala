@@ -8,25 +8,25 @@ class DecisionTreeClassificationModelTest extends SparkModelTest {
 
   @Test def testBinaryClassification() = {
     val sparkModel = getTrainer.fit(binaryClassificationData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/decision_tree_classification_binary"
-    SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
-    val model = DecisionTreeClassificationModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, DecisionTreeClassificationModel.load)
 
     assertBinaryClassificationModelProbabilitySame[cl.DecisionTreeClassificationModel](
-      binaryClassificationData, sparkModel, model
+      binaryClassificationData, sparkModel, modelLoaded
     )
   }
 
   @Test def testMultiClassification() = {
     val sparkModel = getTrainer.fit(multiClassificationData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/decision_tree_classification_multiple"
-    SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
-    val model = DecisionTreeClassificationModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, DecisionTreeClassificationModel.load)
 
     assertMultiClassificationModelProbabilitySame[cl.DecisionTreeClassificationModel](
-      multiClassificationData, sparkModel, model
+      multiClassificationData, sparkModel, modelLoaded
     )
   }
 

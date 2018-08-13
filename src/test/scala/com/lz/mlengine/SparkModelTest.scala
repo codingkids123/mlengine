@@ -1,5 +1,7 @@
 package com.lz.mlengine
 
+import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.Dataset
@@ -85,6 +87,21 @@ trait SparkModelTest extends JUnitSuite with DatasetSuiteBase {
     val expected = sparkModel.transform(data).select("id", "prediction").as[TestPredictionScalar]
     val predictions = data.map(row => new TestPredictionScalar(row.id, model.predictImpl(row.features)(0)))
     assertDatasetApproximateEquals(expected, predictions, 0.001)
+  }
+
+  def saveAndLoadModel(model: MLModel, path: String, modelLoadingFun: (InputStream) => MLModel): MLModel = {
+    val os = new FileOutputStream(new File(path))
+    try {
+      model.save(os)
+    } finally {
+      os.close
+    }
+    val is = new FileInputStream(new File(path))
+    try {
+      modelLoadingFun(is)
+    } finally {
+      is.close
+    }
   }
 
 }

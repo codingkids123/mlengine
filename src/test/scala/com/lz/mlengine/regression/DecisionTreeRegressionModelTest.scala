@@ -8,12 +8,12 @@ class DecisionTreeRegressionModelTest extends SparkModelTest {
 
   @Test def testRegression() = {
     val sparkModel = getTrainer.fit(regressionData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/decision_tree_regression"
-    SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
-    val model = DecisionTreeRegressionModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, DecisionTreeRegressionModel.load)
 
-    assertRegressionModelSame[rg.DecisionTreeRegressionModel](regressionData, sparkModel, model)
+    assertRegressionModelSame[rg.DecisionTreeRegressionModel](regressionData, sparkModel, modelLoaded)
   }
 
   def getTrainer = {

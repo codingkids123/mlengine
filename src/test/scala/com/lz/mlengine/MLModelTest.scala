@@ -1,7 +1,8 @@
 package com.lz.mlengine
 
-import scala.collection.mutable.{Map => MutableMap}
+import java.io.{File, FileInputStream, FileOutputStream}
 
+import scala.collection.mutable.{Map => MutableMap}
 import breeze.linalg.DenseVector
 import breeze.linalg.Vector
 import org.junit.Assert._
@@ -60,8 +61,20 @@ class MLModelTest extends JUnitSuite with Matchers {
       Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2),
       Some(Map[Int, String](0 -> "label0", 1 -> "label1"))
     )
-    modelToSave.save(path)
-    val modelLoaded = MockModel.load(path)
+
+    val os = new FileOutputStream(new File(path))
+    try {
+      modelToSave.save(os)
+    } finally {
+      os.close
+    }
+    val is = new FileInputStream(new File(path))
+    val modelLoaded = try {
+      MockModel.load(is)
+    } finally {
+      is.close
+    }
+
     assertEquals(
       modelToSave.featureToIndexMap.toSeq.sortBy(_._1).toString(),
       modelLoaded.featureToIndexMap.toSeq.sortBy(_._1).toString()
@@ -79,8 +92,20 @@ class MLModelTest extends JUnitSuite with Matchers {
       Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2),
       None
     )
-    modelToSave.save(path)
-    val modelLoaded = MockModel.load(path)
+
+    val os = new FileOutputStream(new File(path))
+    try {
+      modelToSave.save(os)
+    } finally {
+      os.close
+    }
+    val is = new FileInputStream(new File(path))
+    val modelLoaded = try {
+      MockModel.load(is)
+    } finally {
+      is.close
+    }
+
     assertEquals(
       modelToSave.featureToIndexMap.toSeq.sortBy(_._1).toString(),
       modelLoaded.featureToIndexMap.toSeq.sortBy(_._1).toString()

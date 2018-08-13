@@ -8,12 +8,12 @@ class LinearRegressionModelTest extends SparkModelTest {
 
   @Test def testRegression() = {
     val sparkModel = getTrainer.fit(regressionData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/linear_regression"
-    SparkConverter.convert(sparkModel)(Map[String, Int]()).save(path)
-    val model = LinearRegressionModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, LinearRegressionModel.load)
 
-    assertRegressionModelSame[rg.LinearRegressionModel](regressionData, sparkModel, model)
+    assertRegressionModelSame[rg.LinearRegressionModel](regressionData, sparkModel, modelLoaded)
   }
 
   def getTrainer = {

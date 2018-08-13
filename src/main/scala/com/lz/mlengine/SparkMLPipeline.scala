@@ -1,11 +1,17 @@
 package com.lz.mlengine
 
+import java.net.URI
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.{clustering => cs}
 import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 object SparkMLPipeline {
+
+  val configuration = new Configuration()
 
   // Classification.
   val DECISION_TREE_CLASSIFIER = "DecisionTreeClassifier"
@@ -132,21 +138,33 @@ object SparkMLPipeline {
   }
 
   def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):MLModel = {
-    modelName match {
-      // TODO: Add more model support.
-      // Classification models.
-      case DECISION_TREE_CLASSIFIER => classification.DecisionTreeClassificationModel.load(modelPath)
-      case LINEAR_SVC => classification.LinearSVCModel.load(modelPath)
-      case LOGISTIC_REGRESSION => classification.LogisticRegressionModel.load(modelPath)
-      case RANDOM_FOREST_CLASSIFIER => classification.RandomForestClassificationModel.load(modelPath)
+    val fs = FileSystem.get(new URI(modelPath), configuration)
+    val file = new Path(modelPath)
+    try {
+      val fis = fs.open(file)
+      try {
+        modelName match {
+          // TODO: Add more model support.
+          // Classification models.
+          case DECISION_TREE_CLASSIFIER => classification.DecisionTreeClassificationModel.load(fis)
+          case LINEAR_SVC => classification.LinearSVCModel.load(fis)
+          case LOGISTIC_REGRESSION => classification.LogisticRegressionModel.load(fis)
+          case RANDOM_FOREST_CLASSIFIER => classification.RandomForestClassificationModel.load(fis)
 
-      // Regression models.
-      case LINEAR_REGRESSION => regression.LinearRegressionModel.load(modelPath)
-      case DECISION_TREE_REGRESSOR => regression.DecisionTreeRegressionModel.load(modelPath)
-      case RANDOM_FOREST_REGRESSOR => regression.RandomForestRegressionModel.load(modelPath)
+          // Regression models.
+          case LINEAR_REGRESSION => regression.LinearRegressionModel.load(fis)
+          case DECISION_TREE_REGRESSOR => regression.DecisionTreeRegressionModel.load(fis)
+          case RANDOM_FOREST_REGRESSOR => regression.RandomForestRegressionModel.load(fis)
 
-      case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
+          case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
+        }
+      } finally {
+        fis.close
+      }
+    } finally {
+      fs.close()
     }
+
   }
 
   def train(modelName: String, modelPath: String, featurePath: String, labelPath: String)
@@ -154,7 +172,21 @@ object SparkMLPipeline {
     val trainer = getTrainer(modelName)
     val features = loadFeatures(featurePath)
     val labels = loadLabels(modelName, labelPath)
-    trainer.fit(features, labels).save(modelPath)
+    val model = trainer.fit(features, labels)
+
+    val fs = FileSystem.get(new URI(modelPath), configuration)
+    val file = new Path(modelPath)
+    try {
+      if (fs.exists(file)) fs.delete(file, false)
+      val fos = fs.create(file)
+      try {
+        model.save(fos)
+      } finally {
+        fos.close
+      }
+    } finally {
+      fs.close
+    }
   }
 
   def predict(modelName: String, modelPath: String, featurePath: String, predictionPath: String)

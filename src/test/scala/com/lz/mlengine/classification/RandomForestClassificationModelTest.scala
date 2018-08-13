@@ -8,25 +8,25 @@ class RandomForestClassificationModelTest extends SparkModelTest {
 
   @Test def testBinaryClassification() = {
     val sparkModel = getTrainer.fit(binaryClassificationData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/random_forest_classification_binary"
-    SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
-    val model = RandomForestClassificationModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, RandomForestClassificationModel.load)
 
     assertBinaryClassificationModelProbabilitySame[cl.RandomForestClassificationModel](
-      binaryClassificationData, sparkModel, model
+      binaryClassificationData, sparkModel, modelLoaded
     )
   }
 
   @Test def testMultiClassification() = {
     val sparkModel = getTrainer.fit(multiClassificationData)
+    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/random_forest_classification_multiple"
-    SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]()).save(path)
-    val model = RandomForestClassificationModel.load(path)
+    val modelLoaded = saveAndLoadModel(model, path, RandomForestClassificationModel.load)
 
     assertMultiClassificationModelProbabilitySame[cl.RandomForestClassificationModel](
-      multiClassificationData, sparkModel, model
+      multiClassificationData, sparkModel, modelLoaded
     )
   }
 
