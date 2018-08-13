@@ -28,8 +28,8 @@ object SparkMLPipeline {
   val K_MEANS = "KMeans"
   val GAUSSIAN_MIXTURE = "GaussianMixture"
 
-  val CLASSIFICATION_MODELS = Seq(DECISION_TREE_CLASSIFIER, LOGISTIC_REGRESSION, LINEAR_SVC)
-  val REGRESSION_MODELS = Seq(DECISION_TREE_REGRESSOR, LINEAR_REGRESSION)
+  val CLASSIFICATION_MODELS = Seq(DECISION_TREE_CLASSIFIER, LOGISTIC_REGRESSION, LINEAR_SVC, RANDOM_FOREST_CLASSIFIER)
+  val REGRESSION_MODELS = Seq(DECISION_TREE_REGRESSOR, LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR)
   val CLUSTERING_MODELS = Seq()
 
   val MODE_TRAIN = "train"
@@ -138,10 +138,12 @@ object SparkMLPipeline {
       case DECISION_TREE_CLASSIFIER => classification.DecisionTreeClassificationModel.load(modelPath)
       case LINEAR_SVC => classification.LinearSVCModel.load(modelPath)
       case LOGISTIC_REGRESSION => classification.LogisticRegressionModel.load(modelPath)
+      case RANDOM_FOREST_CLASSIFIER => classification.RandomForestClassificationModel.load(modelPath)
 
       // Regression models.
       case LINEAR_REGRESSION => regression.LinearRegressionModel.load(modelPath)
       case DECISION_TREE_REGRESSOR => regression.DecisionTreeRegressionModel.load(modelPath)
+      case RANDOM_FOREST_REGRESSOR => regression.RandomForestRegressionModel.load(modelPath)
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }

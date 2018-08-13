@@ -1,11 +1,12 @@
 package com.lz.mlengine
 
 import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, VectorBuilder}
-import com.lz.mlengine.classification.{DecisionTreeClassificationModel, LinearSVCModel, LogisticRegressionModel}
-import com.lz.mlengine.regression.{DecisionTreeRegressionModel, LinearRegressionModel}
+import com.lz.mlengine.classification.{DecisionTreeClassificationModel, LinearSVCModel, LogisticRegressionModel, RandomForestClassificationModel}
+import com.lz.mlengine.regression.{DecisionTreeRegressionModel, LinearRegressionModel, RandomForestRegressionModel}
 import org.apache.spark.ml.TreeConverter
 import org.apache.spark.ml.classification.{DecisionTreeClassificationModel => SparkDecisionTreeClassificationModel}
 import org.apache.spark.ml.classification.{LinearSVCModel => SparkLinearSVCModel, LogisticRegressionModel => SparkLogisticRegressionModel}
+import org.apache.spark.ml.classification.{RandomForestClassificationModel => SparkRandomForestClassificationModel}
 import org.apache.spark.ml.linalg.{DenseMatrix => SparkDenseMatrix}
 import org.apache.spark.ml.linalg.{DenseVector => SparkDenseVector}
 import org.apache.spark.ml.linalg.Matrices
@@ -16,6 +17,7 @@ import org.apache.spark.ml.linalg.{Vector => SparkVector}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.regression.{LinearRegressionModel => SparkLinearRegressionModel}
 import org.apache.spark.ml.regression.{DecisionTreeRegressionModel => SparkDecisionTreeRegressionModel}
+import org.apache.spark.ml.regression.{RandomForestRegressionModel => SparkRandomForestRegressionModel}
 
 object SparkConverter {
 
@@ -69,6 +71,18 @@ object SparkConverter {
     new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
   }
 
+  implicit def convert(model: SparkRandomForestClassificationModel)
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+    val trees = model.trees
+      .map(tree =>
+        new DecisionTreeClassificationModel(
+          TreeConverter.convertDecisionTree(tree.rootNode),
+          Map[String, Int](),
+          Map[Int, String]())
+      )
+    new RandomForestClassificationModel(trees, model.treeWeights, featureToIndexMap, indexToLabelMap)
+  }
+
   implicit def convert(model: SparkDecisionTreeRegressionModel)
                       (implicit featureToIndexMap: Map[String, Int]): MLModel = {
     val rootNode = TreeConverter.convertDecisionTree(model.rootNode)
@@ -78,6 +92,18 @@ object SparkConverter {
   implicit def convert(model: SparkLinearRegressionModel)
                       (implicit featureToIndexMap: Map[String, Int]): MLModel = {
     new LinearRegressionModel(model.coefficients, model.intercept, model.scale, featureToIndexMap)
+  }
+
+  implicit def convert(model: SparkRandomForestRegressionModel)
+                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+    val trees = model.trees
+      .map(tree =>
+        new DecisionTreeRegressionModel(
+          TreeConverter.convertDecisionTree(tree.rootNode),
+          Map[String, Int]()
+        )
+      )
+    new RandomForestRegressionModel(trees, model.treeWeights, featureToIndexMap)
   }
 
 }

@@ -27,7 +27,7 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     trainer match {
       case _: cl.DecisionTreeClassifier | _: cl.LinearSVC |
-           _: cl.LogisticRegression => {
+           _: cl.LogisticRegression | _: cl.RandomForestClassifier => {
         val labelToIndexMap = getLabelToIndexMap(labels.get)
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
         implicit val indexToLabelMap = labelToIndexMap.map(_.swap)
@@ -41,9 +41,12 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
           case _: cl.LogisticRegression => {
             trainer.fit(labeledVectors).asInstanceOf[cl.LogisticRegressionModel]
           }
+          case _: cl.RandomForestClassifier => {
+            trainer.fit(labeledVectors).asInstanceOf[cl.RandomForestClassificationModel]
+          }
         }
       }
-      case _: rg.DecisionTreeRegressor | _: rg.LinearRegression => {
+      case _: rg.DecisionTreeRegressor | _: rg.LinearRegression | _: rg.RandomForestRegressor => {
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
         trainer match {
           case _: rg.DecisionTreeRegressor => {
@@ -51,6 +54,9 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
           }
           case _: rg.LinearRegression => {
             trainer.fit(labeledVectors).asInstanceOf[rg.LinearRegressionModel]
+          }
+          case _: rg.RandomForestRegressor => {
+            trainer.fit(labeledVectors).asInstanceOf[rg.RandomForestRegressionModel]
           }
         }
       }
