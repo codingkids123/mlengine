@@ -26,7 +26,7 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
   def fit(features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]]): MLModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     trainer match {
-      case _: cl.DecisionTreeClassifier | _: cl.LinearSVC |
+      case _: cl.DecisionTreeClassifier | _: cl.GBTClassifier | _: cl.LinearSVC |
            _: cl.LogisticRegression | _: cl.RandomForestClassifier => {
         val labelToIndexMap = getLabelToIndexMap(labels.get)
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, Some(labelToIndexMap))
@@ -34,6 +34,9 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
         trainer match {
           case _: cl.DecisionTreeClassifier => {
             trainer.fit(labeledVectors).asInstanceOf[cl.DecisionTreeClassificationModel]
+          }
+          case _: cl.GBTClassifier => {
+            trainer.fit(labeledVectors).asInstanceOf[cl.GBTClassificationModel]
           }
           case _: cl.LinearSVC => {
             trainer.fit(labeledVectors).asInstanceOf[cl.LinearSVCModel]
@@ -46,11 +49,14 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
           }
         }
       }
-      case _: rg.DecisionTreeRegressor | _: rg.LinearRegression | _: rg.RandomForestRegressor => {
+      case _: rg.DecisionTreeRegressor | _: rg.GBTRegressor | _: rg.LinearRegression | _: rg.RandomForestRegressor => {
         val labeledVectors = getLabeledSparkFeature(features, labels.get, featureToIndexMap, None)
         trainer match {
           case _: rg.DecisionTreeRegressor => {
             trainer.fit(labeledVectors).asInstanceOf[rg.DecisionTreeRegressionModel]
+          }
+          case _: rg.GBTRegressor => {
+            trainer.fit(labeledVectors).asInstanceOf[rg.GBTRegressionModel]
           }
           case _: rg.LinearRegression => {
             trainer.fit(labeledVectors).asInstanceOf[rg.LinearRegressionModel]
@@ -59,6 +65,9 @@ class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer
             trainer.fit(labeledVectors).asInstanceOf[rg.RandomForestRegressionModel]
           }
         }
+      }
+      case _ => {
+        throw new IllegalArgumentException(s"Unsupported model: ${trainer.getClass}")
       }
     }
   }

@@ -34,8 +34,9 @@ object SparkMLPipeline {
   val K_MEANS = "KMeans"
   val GAUSSIAN_MIXTURE = "GaussianMixture"
 
-  val CLASSIFICATION_MODELS = Seq(DECISION_TREE_CLASSIFIER, LOGISTIC_REGRESSION, LINEAR_SVC, RANDOM_FOREST_CLASSIFIER)
-  val REGRESSION_MODELS = Seq(DECISION_TREE_REGRESSOR, LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR)
+  val CLASSIFICATION_MODELS = Seq(DECISION_TREE_CLASSIFIER, GBT_CLASSIFIER, LINEAR_SVC, LOGISTIC_REGRESSION,
+                                  RANDOM_FOREST_CLASSIFIER)
+  val REGRESSION_MODELS = Seq(DECISION_TREE_REGRESSOR, GBT_REGRESSOR, LINEAR_REGRESSION, RANDOM_FOREST_REGRESSOR)
   val CLUSTERING_MODELS = Seq()
 
   val MODE_TRAIN = "train"
@@ -147,13 +148,15 @@ object SparkMLPipeline {
           // TODO: Add more model support.
           // Classification models.
           case DECISION_TREE_CLASSIFIER => classification.DecisionTreeClassificationModel.load(fis)
+          case GBT_CLASSIFIER => classification.GBTClassificationModel.load(fis)
           case LINEAR_SVC => classification.LinearSVCModel.load(fis)
           case LOGISTIC_REGRESSION => classification.LogisticRegressionModel.load(fis)
           case RANDOM_FOREST_CLASSIFIER => classification.RandomForestClassificationModel.load(fis)
 
           // Regression models.
-          case LINEAR_REGRESSION => regression.LinearRegressionModel.load(fis)
           case DECISION_TREE_REGRESSOR => regression.DecisionTreeRegressionModel.load(fis)
+          case GBT_REGRESSOR => regression.GBTRegressionModel.load(fis)
+          case LINEAR_REGRESSION => regression.LinearRegressionModel.load(fis)
           case RANDOM_FOREST_REGRESSOR => regression.RandomForestRegressionModel.load(fis)
 
           case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
