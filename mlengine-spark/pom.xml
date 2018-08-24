@@ -1,0 +1,59 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.lz.mlengine</groupId>
+    <artifactId>mlengine</artifactId>
+    <version>0.0.1</version>
+  </parent>
+  <groupId>com.lz.mlengine</groupId>
+  <artifactId>mlengine-spark</artifactId>
+  <version>0.0.1</version>
+  <name>${project.artifactId}</name>
+  <description>ML Engine Spark</description>
+  <inceptionYear>2018</inceptionYear>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.lz.mlengine</groupId>
+      <artifactId>mlengine-core</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-mllib_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalanlp</groupId>
+      <artifactId>breeze_2.11</artifactId> <!-- or 2.11 -->
+      <version>0.13.2</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>com.holdenkarau</groupId>
+      <artifactId>spark-testing-base_${scala.compat.version}</artifactId>
+      <version>${spark.version}_0.10.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-hive_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+  </build>
+</project>

@@ -36,3 +36,6 @@ buildNumber.properties
 
 # Intellij
 *.iml
+
+# Mac
+.DS_Store

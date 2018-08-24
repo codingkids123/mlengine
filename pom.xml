@@ -3,6 +3,7 @@
   <groupId>com.lz.mlengine</groupId>
   <artifactId>mlengine</artifactId>
   <version>0.0.1</version>
+  <packaging>pom</packaging>
   <name>${project.artifactId}</name>
   <description>ML Engine</description>
   <inceptionYear>2018</inceptionYear>
@@ -24,26 +25,16 @@
     <spec2.version>4.2.0</spec2.version>
   </properties>
 
+  <modules>
+    <module>mlengine-core</module>
+    <module>mlengine-spark</module>
+  </modules>
+
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_${scala.compat.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-mllib_${scala.compat.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_${scala.compat.version}</artifactId>
-      <version>${spark.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
@@ -83,23 +74,11 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>com.holdenkarau</groupId>
-      <artifactId>spark-testing-base_${scala.compat.version}</artifactId>
-      <version>${spark.version}_0.10.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-hive_${scala.compat.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <!--<sourceDirectory>src/main/scala</sourceDirectory>-->
+    <!--<testSourceDirectory>src/test/scala</testSourceDirectory>-->
     <plugins>
       <plugin>
         <!-- see http://davidb.github.com/scala-maven-plugin -->
