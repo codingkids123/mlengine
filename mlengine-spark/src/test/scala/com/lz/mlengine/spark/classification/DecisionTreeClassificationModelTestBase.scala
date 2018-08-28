@@ -1,15 +1,15 @@
 package com.lz.mlengine.spark.classification
 
 import com.lz.mlengine.core.classification.DecisionTreeClassificationModel
-import com.lz.mlengine.spark.{SparkConverter, SparkModelTest}
+import com.lz.mlengine.spark.{Converter, ModelTestBase}
 import org.apache.spark.ml.{classification => cl}
 import org.junit.Test
 
-class DecisionTreeClassificationModelTest extends SparkModelTest {
+class DecisionTreeClassificationModelTestBase extends ModelTestBase {
 
   @Test def testBinaryClassification() = {
     val sparkModel = getTrainer.fit(binaryClassificationData)
-    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
+    val model = Converter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/decision_tree_classification_binary"
     val modelLoaded = saveAndLoadModel(model, path, DecisionTreeClassificationModel.load)
@@ -21,7 +21,7 @@ class DecisionTreeClassificationModelTest extends SparkModelTest {
 
   @Test def testMultiClassification() = {
     val sparkModel = getTrainer.fit(multiClassificationData)
-    val model = SparkConverter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
+    val model = Converter.convert(sparkModel)(Map[String, Int](), Map[Int, String]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/decision_tree_classification_multiple"
     val modelLoaded = saveAndLoadModel(model, path, DecisionTreeClassificationModel.load)

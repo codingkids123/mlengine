@@ -11,7 +11,7 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.{regression => rg}
 import org.scalatest.{FlatSpec, Matchers}
 
-class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
+class TrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
 
   import spark.implicits._
 
@@ -154,15 +154,15 @@ class SparkTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
 //  }
 
   def getClassificationTrainer() = {
-    new SparkTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())(spark)
+    new Trainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())(spark)
   }
 
   def getRegressionTrainer() = {
-    new SparkTrainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())(spark)
+    new Trainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())(spark)
   }
 
   def getClusteringTrainer() = {
-    new SparkTrainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())(spark)
+    new Trainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())(spark)
   }
 
 }

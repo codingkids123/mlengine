@@ -2,9 +2,9 @@ package com.lz.mlengine.spark
 
 import org.scalatest._
 import org.apache.spark.ml.linalg.{Matrices, Vectors}
-import SparkConverter._
+import Converter._
 
-class SparkConverterTest extends FlatSpec with Matchers {
+class ConverterTest extends FlatSpec with Matchers {
 
   "convert" should "convert spark dense vector to dense vector and back" in {
     val vector = Vectors.dense(Array(1.0, 2.0, 3.0, 4.0))

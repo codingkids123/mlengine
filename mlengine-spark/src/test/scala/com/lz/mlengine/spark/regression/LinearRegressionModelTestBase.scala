@@ -1,15 +1,15 @@
 package com.lz.mlengine.spark.regression
 
 import com.lz.mlengine.core.regression.LinearRegressionModel
-import com.lz.mlengine.spark.{SparkConverter, SparkModelTest}
+import com.lz.mlengine.spark.{Converter, ModelTestBase}
 import org.apache.spark.ml.{regression => rg}
 import org.junit.Test
 
-class LinearRegressionModelTest extends SparkModelTest {
+class LinearRegressionModelTestBase extends ModelTestBase {
 
   @Test def testRegression() = {
     val sparkModel = getTrainer.fit(regressionData)
-    val model = SparkConverter.convert(sparkModel)(Map[String, Int]())
+    val model = Converter.convert(sparkModel)(Map[String, Int]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/linear_regression"
     val modelLoaded = saveAndLoadModel(model, path, LinearRegressionModel.load)

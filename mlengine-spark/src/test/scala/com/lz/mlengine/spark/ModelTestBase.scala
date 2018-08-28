@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions.monotonically_increasing_id
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import org.scalatest.junit.JUnitSuite
-import com.lz.mlengine.spark.SparkConverter._
+import com.lz.mlengine.spark.Converter._
 import org.apache.spark.ml.Model
 
 case class SVMData(id: Long, label: String, features: Vector)
@@ -21,7 +21,7 @@ case class TestProbabilityVector(id: Long, probability: Vector)
 
 case class TestPredictionScalar(id: Long, prediction: Double)
 
-trait SparkModelTest extends JUnitSuite with DatasetSuiteBase {
+trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
 
   import spark.implicits._
 

@@ -23,7 +23,7 @@ import com.lz.mlengine.core.MLModel
 import com.lz.mlengine.core.classification._
 import com.lz.mlengine.core.regression._
 
-object SparkConverter {
+object Converter {
 
   implicit def convert(matrix: SparkMatrix): Matrix[Double] = {
     matrix match {

@@ -20,10 +20,10 @@ case class SparkPredictionRaw(id: String, rawPrediction: Vector)
 
 case class SparkPrediction(id: String, prediction: Double)
 
-class SparkTrainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer: E)(implicit spark: SparkSession) {
+class Trainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer: E)(implicit spark: SparkSession) {
 
   import spark.implicits._
-  import SparkConverter._
+  import Converter._
 
   def fit(features: Dataset[FeatureSet], labels: Option[Dataset[PredictionSet]]): MLModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)

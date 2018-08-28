@@ -13,7 +13,7 @@ import com.lz.mlengine.core.classification._
 import com.lz.mlengine.core.regression._
 import com.lz.mlengine.core.{FeatureSet, MLModel, PredictionSet}
 
-object SparkMLPipeline {
+object Pipeline {
 
   val configuration = new Configuration()
 
@@ -98,45 +98,45 @@ object SparkMLPipeline {
     }
   }
 
-  def getTrainer(modelName: String)(implicit spark: SparkSession):SparkTrainer[_, _] = {
+  def getTrainer(modelName: String)(implicit spark: SparkSession):Trainer[_, _] = {
     modelName match {
       // Classification models.
       case DECISION_TREE_CLASSIFIER =>
-        new SparkTrainer[cl.DecisionTreeClassifier, cl.DecisionTreeClassificationModel](new cl.DecisionTreeClassifier())
+        new Trainer[cl.DecisionTreeClassifier, cl.DecisionTreeClassificationModel](new cl.DecisionTreeClassifier())
       case GBT_CLASSIFIER =>
-        new SparkTrainer[cl.GBTClassifier, cl.GBTClassificationModel](new cl.GBTClassifier())
+        new Trainer[cl.GBTClassifier, cl.GBTClassificationModel](new cl.GBTClassifier())
       case LINEAR_SVC =>
-        new SparkTrainer[cl.LinearSVC, cl.LinearSVCModel](new cl.LinearSVC())
+        new Trainer[cl.LinearSVC, cl.LinearSVCModel](new cl.LinearSVC())
       case LOGISTIC_REGRESSION =>
-        new SparkTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())
+        new Trainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())
       case MULTILAYER_PERCEPTRON =>
-        new SparkTrainer[cl.MultilayerPerceptronClassifier, cl.MultilayerPerceptronClassificationModel](
+        new Trainer[cl.MultilayerPerceptronClassifier, cl.MultilayerPerceptronClassificationModel](
           new cl.MultilayerPerceptronClassifier())
       case NAIVE_BAYES =>
-        new SparkTrainer[cl.NaiveBayes, cl.NaiveBayesModel](new cl.NaiveBayes())
+        new Trainer[cl.NaiveBayes, cl.NaiveBayesModel](new cl.NaiveBayes())
       case RANDOM_FOREST_CLASSIFIER =>
-        new SparkTrainer[cl.RandomForestClassifier, cl.RandomForestClassificationModel](new cl.RandomForestClassifier())
+        new Trainer[cl.RandomForestClassifier, cl.RandomForestClassificationModel](new cl.RandomForestClassifier())
 
       // Regression models.
       case DECISION_TREE_REGRESSOR =>
-        new SparkTrainer[rg.DecisionTreeRegressor, rg.DecisionTreeRegressionModel](new rg.DecisionTreeRegressor())
+        new Trainer[rg.DecisionTreeRegressor, rg.DecisionTreeRegressionModel](new rg.DecisionTreeRegressor())
       case GBT_REGRESSOR =>
-        new SparkTrainer[rg.GBTRegressor, rg.GBTRegressionModel](new rg.GBTRegressor())
+        new Trainer[rg.GBTRegressor, rg.GBTRegressionModel](new rg.GBTRegressor())
       case GENERALIZED_LINEAR_REGRESSION =>
-        new SparkTrainer[rg.GeneralizedLinearRegression, rg.GeneralizedLinearRegressionModel](
+        new Trainer[rg.GeneralizedLinearRegression, rg.GeneralizedLinearRegressionModel](
           new rg.GeneralizedLinearRegression())
       case ISOTONIC_REGRESSION =>
-        new SparkTrainer[rg.IsotonicRegression, rg.IsotonicRegressionModel](new rg.IsotonicRegression())
+        new Trainer[rg.IsotonicRegression, rg.IsotonicRegressionModel](new rg.IsotonicRegression())
       case LINEAR_REGRESSION =>
-        new SparkTrainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())
+        new Trainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())
       case RANDOM_FOREST_REGRESSOR =>
-        new SparkTrainer[rg.RandomForestRegressor, rg.RandomForestRegressionModel](new rg.RandomForestRegressor())
+        new Trainer[rg.RandomForestRegressor, rg.RandomForestRegressionModel](new rg.RandomForestRegressor())
 
       // Clustering models.
       case K_MEANS =>
-        new SparkTrainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())
+        new Trainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())
       case GAUSSIAN_MIXTURE =>
-        new SparkTrainer[cs.GaussianMixture, cs.GaussianMixtureModel](new cs.GaussianMixture())
+        new Trainer[cs.GaussianMixture, cs.GaussianMixtureModel](new cs.GaussianMixture())
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }

@@ -1,15 +1,15 @@
 package com.lz.mlengine.spark.regression
 
 import com.lz.mlengine.core.regression.GBTRegressionModel
-import com.lz.mlengine.spark.{SparkConverter, SparkModelTest}
+import com.lz.mlengine.spark.{Converter, ModelTestBase}
 import org.apache.spark.ml.{regression => rg}
 import org.junit.Test
 
-class GBTRegressionModelTest extends SparkModelTest {
+class GBTRegressionModelTestBase extends ModelTestBase {
 
   @Test def testRegression() = {
     val sparkModel = getTrainer.fit(regressionData)
-    val model = SparkConverter.convert(sparkModel)(Map[String, Int]())
+    val model = Converter.convert(sparkModel)(Map[String, Int]())
 
     val path = s"${temporaryFolder.getRoot.getPath}/gbt_regression"
     val modelLoaded = saveAndLoadModel(model, path, GBTRegressionModel.load)
