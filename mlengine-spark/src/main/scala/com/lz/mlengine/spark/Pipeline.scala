@@ -5,13 +5,12 @@ import java.net.URI
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.ml.{classification => cl}
-import org.apache.spark.ml.{clustering => cs}
 import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 import com.lz.mlengine.core.classification._
 import com.lz.mlengine.core.regression._
-import com.lz.mlengine.core.{FeatureSet, MLModel, PredictionSet}
+import com.lz.mlengine.core.{FeatureSet, MLModel}
 
 object Pipeline {
 
@@ -76,67 +75,57 @@ object Pipeline {
     spark.read.schema(Schema.featureSet).json(path).as[FeatureSet]
   }
 
-  def loadClassificationLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
+  def loadClassificationLabels(path: String)(implicit spark: SparkSession): Dataset[(String, String)] = {
     import spark.implicits._
-    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Map(l.getString(1) -> 1.0)))
+    spark.read.csv(path).map(l => (l.getString(0), l.getString(1)))
   }
 
-  def loadRegressionLabels(path: String)(implicit spark: SparkSession): Dataset[PredictionSet] = {
+  def loadRegressionLabels(path: String)(implicit spark: SparkSession): Dataset[(String, Double)] = {
     import spark.implicits._
-    spark.read.csv(path).map(l => PredictionSet(l.getString(0), Map("value" -> l.getString(1).toDouble)))
-  }
-
-  def loadLabels(modelName: String, labelPath: String)(implicit spark: SparkSession): Option[Dataset[PredictionSet]] = {
-    if (CLASSIFICATION_MODELS.contains(modelName)) {
-      Some(loadClassificationLabels(labelPath))
-    } else if (REGRESSION_MODELS.contains(modelName)) {
-      Some(loadRegressionLabels(labelPath))
-    } else if (CLUSTERING_MODELS.contains(modelName)) {
-      None
-    } else {
-      throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
-    }
+    spark.read.csv(path).map(l => (l.getString(0), l.getString(1).toDouble))
   }
 
   def getTrainer(modelName: String)(implicit spark: SparkSession):Trainer[_, _] = {
     modelName match {
       // Classification models.
       case DECISION_TREE_CLASSIFIER =>
-        new Trainer[cl.DecisionTreeClassifier, cl.DecisionTreeClassificationModel](new cl.DecisionTreeClassifier())
+        new ClassificationTrainer[
+          cl.DecisionTreeClassifier, cl.DecisionTreeClassificationModel](new cl.DecisionTreeClassifier())
       case GBT_CLASSIFIER =>
-        new Trainer[cl.GBTClassifier, cl.GBTClassificationModel](new cl.GBTClassifier())
+        new ClassificationTrainer[cl.GBTClassifier, cl.GBTClassificationModel](new cl.GBTClassifier())
       case LINEAR_SVC =>
-        new Trainer[cl.LinearSVC, cl.LinearSVCModel](new cl.LinearSVC())
+        new ClassificationTrainer[cl.LinearSVC, cl.LinearSVCModel](new cl.LinearSVC())
       case LOGISTIC_REGRESSION =>
-        new Trainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())
+        new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())
       case MULTILAYER_PERCEPTRON =>
-        new Trainer[cl.MultilayerPerceptronClassifier, cl.MultilayerPerceptronClassificationModel](
+        new ClassificationTrainer[cl.MultilayerPerceptronClassifier, cl.MultilayerPerceptronClassificationModel](
           new cl.MultilayerPerceptronClassifier())
       case NAIVE_BAYES =>
-        new Trainer[cl.NaiveBayes, cl.NaiveBayesModel](new cl.NaiveBayes())
+        new ClassificationTrainer[cl.NaiveBayes, cl.NaiveBayesModel](new cl.NaiveBayes())
       case RANDOM_FOREST_CLASSIFIER =>
-        new Trainer[cl.RandomForestClassifier, cl.RandomForestClassificationModel](new cl.RandomForestClassifier())
+        new ClassificationTrainer[
+          cl.RandomForestClassifier, cl.RandomForestClassificationModel](new cl.RandomForestClassifier())
 
       // Regression models.
       case DECISION_TREE_REGRESSOR =>
-        new Trainer[rg.DecisionTreeRegressor, rg.DecisionTreeRegressionModel](new rg.DecisionTreeRegressor())
+        new RegressionTrainer[rg.DecisionTreeRegressor, rg.DecisionTreeRegressionModel](new rg.DecisionTreeRegressor())
       case GBT_REGRESSOR =>
-        new Trainer[rg.GBTRegressor, rg.GBTRegressionModel](new rg.GBTRegressor())
+        new RegressionTrainer[rg.GBTRegressor, rg.GBTRegressionModel](new rg.GBTRegressor())
       case GENERALIZED_LINEAR_REGRESSION =>
-        new Trainer[rg.GeneralizedLinearRegression, rg.GeneralizedLinearRegressionModel](
+        new RegressionTrainer[rg.GeneralizedLinearRegression, rg.GeneralizedLinearRegressionModel](
           new rg.GeneralizedLinearRegression())
       case ISOTONIC_REGRESSION =>
-        new Trainer[rg.IsotonicRegression, rg.IsotonicRegressionModel](new rg.IsotonicRegression())
+        new RegressionTrainer[rg.IsotonicRegression, rg.IsotonicRegressionModel](new rg.IsotonicRegression())
       case LINEAR_REGRESSION =>
-        new Trainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())
+        new RegressionTrainer[rg.LinearRegression, rg.LinearRegressionModel](new rg.LinearRegression())
       case RANDOM_FOREST_REGRESSOR =>
-        new Trainer[rg.RandomForestRegressor, rg.RandomForestRegressionModel](new rg.RandomForestRegressor())
+        new RegressionTrainer[rg.RandomForestRegressor, rg.RandomForestRegressionModel](new rg.RandomForestRegressor())
 
       // Clustering models.
-      case K_MEANS =>
-        new Trainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())
-      case GAUSSIAN_MIXTURE =>
-        new Trainer[cs.GaussianMixture, cs.GaussianMixtureModel](new cs.GaussianMixture())
+//      case K_MEANS =>
+//        new Trainer[cs.KMeans, cs.KMeansModel](new cs.KMeans())
+//      case GAUSSIAN_MIXTURE =>
+//        new Trainer[cs.GaussianMixture, cs.GaussianMixtureModel](new cs.GaussianMixture())
 
       case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
@@ -171,15 +160,21 @@ object Pipeline {
     } finally {
       fs.close()
     }
-
   }
 
   def train(modelName: String, modelPath: String, featurePath: String, labelPath: String)
            (implicit spark: SparkSession): Unit = {
     val trainer = getTrainer(modelName)
     val features = loadFeatures(featurePath)
-    val labels = loadLabels(modelName, labelPath)
-    val model = trainer.fit(features, labels)
+    val model = if (CLASSIFICATION_MODELS.contains(modelName)) {
+      val labels = loadClassificationLabels(labelPath)
+      trainer.asInstanceOf[ClassificationTrainer[_, _]].fit(features, labels)
+    } else if (REGRESSION_MODELS.contains(modelName)) {
+      val labels = loadRegressionLabels(labelPath)
+      trainer.asInstanceOf[RegressionTrainer[_, _]].fit(features, labels)
+    } else {
+      throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
+    }
 
     val fs = FileSystem.get(new URI(modelPath), configuration)
     val file = new Path(modelPath)
