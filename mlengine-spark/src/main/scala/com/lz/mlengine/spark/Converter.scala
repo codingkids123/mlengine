@@ -19,7 +19,6 @@ import org.apache.spark.ml.regression.{GBTRegressionModel => SparkGBTRegressionM
 import org.apache.spark.ml.regression.{LinearRegressionModel => SparkLinearRegressionModel}
 import org.apache.spark.ml.regression.{RandomForestRegressionModel => SparkRandomForestRegressionModel}
 
-import com.lz.mlengine.core.MLModel
 import com.lz.mlengine.core.classification._
 import com.lz.mlengine.core.regression._
 
@@ -60,13 +59,15 @@ object Converter {
   }
 
   implicit def convert(model: SparkDecisionTreeClassificationModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]
+                      ): DecisionTreeClassificationModel = {
     val rootNode = TreeConverter.convertDecisionTree(model.rootNode)
     new DecisionTreeClassificationModel(rootNode, featureToIndexMap, indexToLabelMap)
   }
 
   implicit def convert(model: SparkGBTClassificationModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]
+                      ): GBTClassificationModel = {
     val trees = model.trees
       .map(tree =>
         new DecisionTreeRegressionModel(
@@ -77,17 +78,20 @@ object Converter {
   }
 
   implicit def convert(model: SparkLogisticRegressionModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]
+                      ): LogisticRegressionModel = {
     new LogisticRegressionModel(model.coefficientMatrix, model.interceptVector, featureToIndexMap, indexToLabelMap)
   }
 
   implicit def convert(model: SparkLinearSVCModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]
+                      ): LinearSVCModel = {
     new LinearSVCModel(model.coefficients, model.intercept, featureToIndexMap, indexToLabelMap)
   }
 
   implicit def convert(model: SparkRandomForestClassificationModel)
-                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int], indexToLabelMap: Map[Int, String]
+                      ): RandomForestClassificationModel = {
     val trees = model.trees
       .map(tree =>
         new DecisionTreeClassificationModel(
@@ -99,13 +103,13 @@ object Converter {
   }
 
   implicit def convert(model: SparkDecisionTreeRegressionModel)
-                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int]): DecisionTreeRegressionModel = {
     val rootNode = TreeConverter.convertDecisionTree(model.rootNode)
     new DecisionTreeRegressionModel(rootNode, featureToIndexMap)
   }
 
   implicit def convert(model: SparkGBTRegressionModel)
-                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int]): GBTRegressionModel = {
     val trees = model.trees
       .map(tree =>
         new DecisionTreeRegressionModel(
@@ -117,12 +121,12 @@ object Converter {
 
 
   implicit def convert(model: SparkLinearRegressionModel)
-                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int]): LinearRegressionModel = {
     new LinearRegressionModel(model.coefficients, model.intercept, model.scale, featureToIndexMap)
   }
 
   implicit def convert(model: SparkRandomForestRegressionModel)
-                      (implicit featureToIndexMap: Map[String, Int]): MLModel = {
+                      (implicit featureToIndexMap: Map[String, Int]): RandomForestRegressionModel = {
     val trees = model.trees
       .map(tree =>
         new DecisionTreeRegressionModel(

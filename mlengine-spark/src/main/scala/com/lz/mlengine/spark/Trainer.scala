@@ -7,8 +7,7 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.{Dataset, SparkSession}
-
-import com.lz.mlengine.core.{FeatureSet, MLModel}
+import com.lz.mlengine.core.{ClassificationModel, FeatureSet, RegressionModel}
 import com.lz.mlengine.spark.Converter._
 
 case class LabeledSparkFeature(id: String, features: Vector, label: Double)
@@ -57,7 +56,7 @@ class ClassificationTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
       })
   }
 
-  def fit(features: Dataset[FeatureSet], labels: Dataset[(String, String)]): MLModel = {
+  def fit(features: Dataset[FeatureSet], labels: Dataset[(String, String)]): ClassificationModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     val labelToIndexMap = getLabelToIndexMap(labels)
     val labeledVectors = getLabeledSparkFeature(features, labels, featureToIndexMap, labelToIndexMap)
@@ -104,7 +103,7 @@ class RegressionTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
       })
   }
 
-  def fit(features: Dataset[FeatureSet], labels: Dataset[(String, Double)]): MLModel = {
+  def fit(features: Dataset[FeatureSet], labels: Dataset[(String, Double)]): RegressionModel = {
     implicit val featureToIndexMap = getFeatureToIndexMap(features)
     val labeledVectors = getLabeledSparkFeature(features, labels, featureToIndexMap)
 

@@ -4,8 +4,7 @@ import java.io._
 
 import breeze.linalg.{Vector, VectorBuilder}
 
-abstract class MLModel(featureToIndexMap: Map[String, Int], indexToLabelMapMaybe: Option[Map[Int, String]]
-                      ) extends Serializable {
+abstract class MLModel(val featureToIndexMap: Map[String, Int]) extends Serializable {
 
   def predict(feature: FeatureSet): PredictionSet = {
     val vector = convertFeatureSetToVector(feature)
@@ -38,18 +37,29 @@ abstract class MLModel(featureToIndexMap: Map[String, Int], indexToLabelMapMaybe
     vb.toSparseVector
   }
 
-  private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet = {
-    indexToLabelMapMaybe match {
-      case Some(indexToLabelMap) =>
-        new PredictionSet(
-          id,
-          vector.toArray.zipWithIndex.map(item => (indexToLabelMap.get(item._2).get, item._1)).toMap
-        )
-      case None => new PredictionSet(id, Map("value" -> vector(0)))
-    }
-  }
+  private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet
 
   private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double]
+
+}
+
+abstract class ClassificationModel(override val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
+                                  ) extends MLModel(featureToIndexMap) with Serializable {
+  override private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet = {
+    new PredictionSet(
+      id,
+      vector.toArray.zipWithIndex.map(item => (indexToLabelMap.get(item._2).get, item._1)).toMap
+    )
+  }
+
+}
+
+abstract class RegressionModel(override val featureToIndexMap: Map[String, Int]) extends MLModel(featureToIndexMap)
+  with Serializable {
+
+  override private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet = {
+    new PredictionSet(id, Map("value" -> vector(0)))
+  }
 
 }
 

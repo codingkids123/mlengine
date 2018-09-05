@@ -1,12 +1,13 @@
 package com.lz.mlengine.core.classification
 
 import breeze.linalg.{Vector, sum}
-import com.lz.mlengine.core.{MLModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
 
 class RandomForestClassificationModel(val trees: Array[DecisionTreeClassificationModel],
                                       val weights: Array[Double],
-                                      val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
-                                     ) extends MLModel(featureToIndexMap, Some(indexToLabelMap)) {
+                                      override val featureToIndexMap: Map[String, Int],
+                                      override val indexToLabelMap: Map[Int, String]
+                                     ) extends ClassificationModel(featureToIndexMap, indexToLabelMap) {
 
   override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = {
     val prediction = trees.zip(weights)

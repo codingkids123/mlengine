@@ -1,11 +1,12 @@
 package com.lz.mlengine.core.classification
 
 import breeze.linalg._
-import com.lz.mlengine.core.{MLModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
 
 class LogisticRegressionModel(val coefficients: Matrix[Double], val intercept: Vector[Double],
-                              val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
-                             ) extends MLModel(featureToIndexMap, Some(indexToLabelMap)) {
+                              override val featureToIndexMap: Map[String, Int],
+                              override val indexToLabelMap: Map[Int, String]
+                             ) extends ClassificationModel(featureToIndexMap, indexToLabelMap) {
 
   override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = {
     val r = coefficients * vector + intercept
