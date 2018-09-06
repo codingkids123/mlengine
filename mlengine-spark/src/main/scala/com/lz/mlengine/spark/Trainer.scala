@@ -1,5 +1,8 @@
 package com.lz.mlengine.spark
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg.Vector
@@ -7,7 +10,7 @@ import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.{Dataset, SparkSession}
-import com.lz.mlengine.core.{ClassificationModel, FeatureSet, RegressionModel}
+import com.lz.mlengine.core.{ClassificationMetrics, ClassificationModel, FeatureSet, RegressionMetrics, RegressionModel}
 import com.lz.mlengine.spark.Converter._
 
 case class LabeledSparkFeature(id: String, features: Vector, label: Double)
@@ -122,6 +125,50 @@ class RegressionTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
       }
       case _ => {
         throw new IllegalArgumentException(s"Unsupported model: ${trainer.getClass}")
+      }
+    }
+  }
+
+}
+
+object Trainer {
+
+  type ClassificationLabels = Dataset[(String, String)]
+  type RegressionTrainers = Dataset[(String, Double)]
+
+  def train(trainer: ClassificationTrainer[_, _], features: Dataset[FeatureSet], trainLabels: Dataset[(String, String)],
+            testLabels: Dataset[(String, String)])
+           (implicit spark: SparkSession): (ClassificationModel, ClassificationMetrics) = {
+    val model = trainer.fit(features, trainLabels)
+    val metrics = Evaluator.evaluate(features, testLabels, model)
+    (model, metrics)
+  }
+
+  def train(trainer: RegressionTrainer[_, _], features: Dataset[FeatureSet], trainLabels: Dataset[(String, Double)],
+            testLabels: Dataset[(String, Double)])
+           (implicit spark: SparkSession): (RegressionModel, RegressionMetrics) = {
+    val model = trainer.fit(features, trainLabels)
+    val metrics = Evaluator.evaluate(features, testLabels, model)
+    (model, metrics)
+  }
+
+  def trainMultipleClassifier(trainers: Seq[ClassificationTrainer[_, _]], features: Dataset[FeatureSet],
+                              trainLabels: ClassificationLabels, testLabels: ClassificationLabels)
+                             (implicit spark: SparkSession
+                             ): Seq[Future[(ClassificationModel, ClassificationMetrics)]] = {
+    trainers.map { trainer =>
+      Future {
+        train(trainer, features, trainLabels, testLabels)
+      }
+    }
+  }
+
+  def trainMultipleRegressor(trainers: Seq[RegressionTrainer[_, _]], features: Dataset[FeatureSet],
+                             trainLabels: RegressionTrainers, testLabels: RegressionTrainers)
+                            (implicit spark: SparkSession): Seq[Future[(RegressionModel, RegressionMetrics)]] = {
+    trainers.map { trainer =>
+      Future {
+        train(trainer, features, trainLabels, testLabels)
       }
     }
   }

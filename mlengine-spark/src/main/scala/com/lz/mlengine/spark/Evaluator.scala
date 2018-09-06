@@ -1,23 +1,35 @@
 package com.lz.mlengine.spark
 
-import com.lz.mlengine.core.{FeatureSet, MLModel, PredictionSet}
+
+import com.lz.mlengine.core.{ClassificationMetrics, ClassificationModel, FeatureSet, RegressionMetrics, RegressionModel, Evaluator => CoreEvaluator}
 import org.apache.spark.sql.{Dataset, SparkSession}
 
-class Metrics {
+object Evaluator {
 
-}
+  type ClassificationLabel = Dataset[(String, String)]
+  type RegressionLabel = Dataset[(String, Double)]
 
-
-object Metrics {
-
-  def evaluate(features: Dataset[FeatureSet], labels: Dataset[PredictionSet], model: MLModel)(implicit spark: SparkSession) = {
+  def evaluate(features: Dataset[FeatureSet], labels: ClassificationLabel, model: ClassificationModel,
+               numSteps: Int = 100)
+              (implicit spark: SparkSession): ClassificationMetrics = {
     import spark.implicits._
 
-//    features.joinWith(labels, features.col("id") === labels.col("id"))
-//      .map(row => {
-//        val a = model.predict(row._1)
-//      })
+    val predictions = features.joinWith(labels, features.col("id") === labels.col("_1"))
+      .map { case (feature, label) => (model.predict(feature).predictions, label._2) }
+      .collect
 
+    CoreEvaluator.evaluate(predictions.toSeq, model.indexToLabelMap.values.toSeq, numSteps)
+  }
+
+  def evaluate(features: Dataset[FeatureSet], labels: RegressionLabel, model: RegressionModel)
+              (implicit spark: SparkSession): RegressionMetrics = {
+    import spark.implicits._
+
+    val predictions = features.joinWith(labels, features.col("id") === labels.col("_1"))
+      .map { case (feature, label) => (model.predict(feature).predictions.get("value").get, label._2) }
+      .collect
+
+    CoreEvaluator.evaluate(predictions.toSeq)
   }
 
 }
