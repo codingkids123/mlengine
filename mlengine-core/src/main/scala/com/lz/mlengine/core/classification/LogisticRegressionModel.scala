@@ -1,7 +1,7 @@
 package com.lz.mlengine.core.classification
 
 import breeze.linalg._
-import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, ModelLoader}
 
 class LogisticRegressionModel(val coefficients: Matrix[Double], val intercept: Vector[Double],
                               override val featureToIndexMap: Map[String, Int],
@@ -31,4 +31,4 @@ class LogisticRegressionModel(val coefficients: Matrix[Double], val intercept: V
 
 }
 
-object LogisticRegressionModel extends MLModelLoader[LogisticRegressionModel]
+object LogisticRegressionModel extends ModelLoader[LogisticRegressionModel]

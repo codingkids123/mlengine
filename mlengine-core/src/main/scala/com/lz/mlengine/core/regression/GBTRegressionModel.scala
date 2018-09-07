@@ -1,7 +1,7 @@
 package com.lz.mlengine.core.regression
 
 import breeze.linalg.{DenseVector, Vector}
-import com.lz.mlengine.core.{MLModelLoader, RegressionModel}
+import com.lz.mlengine.core.{ModelLoader, RegressionModel}
 
 class GBTRegressionModel(val trees: Array[DecisionTreeRegressionModel],
                          val weights: Array[Double],
@@ -18,7 +18,7 @@ class GBTRegressionModel(val trees: Array[DecisionTreeRegressionModel],
 
 }
 
-object GBTRegressionModel extends MLModelLoader[GBTRegressionModel]
+object GBTRegressionModel extends ModelLoader[GBTRegressionModel]
 
 
 

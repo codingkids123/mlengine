@@ -1,7 +1,7 @@
 package com.lz.mlengine.core.classification
 
 import breeze.linalg.{Vector, sum}
-import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, ModelLoader}
 
 class RandomForestClassificationModel(val trees: Array[DecisionTreeClassificationModel],
                                       val weights: Array[Double],
@@ -19,4 +19,4 @@ class RandomForestClassificationModel(val trees: Array[DecisionTreeClassificatio
 
 }
 
-object RandomForestClassificationModel extends MLModelLoader[RandomForestClassificationModel]
+object RandomForestClassificationModel extends ModelLoader[RandomForestClassificationModel]

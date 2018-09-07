@@ -3,15 +3,16 @@ package com.lz.mlengine.spark
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import com.lz.mlengine.core.MLModel
 import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.{Model => SparkModel}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions.monotonically_increasing_id
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import org.scalatest.junit.JUnitSuite
+
+import com.lz.mlengine.core.Model
 import com.lz.mlengine.spark.Converter._
-import org.apache.spark.ml.Model
 
 case class SVMData(id: Long, label: String, features: Vector)
 
@@ -48,8 +49,8 @@ trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
     spark.read.format("libsvm").load(path).withColumn("id", monotonically_increasing_id).as[SVMData]
   }
 
-  def assertBinaryClassificationModelRawSame[M <: Model[M]](data: Dataset[SVMData], sparkModel: Model[M], model: MLModel
-                                                        ) = {
+  def assertBinaryClassificationModelRawSame[M <: SparkModel[M]](data: Dataset[SVMData], sparkModel: SparkModel[M],
+                                                                 model: Model) = {
     val expected = sparkModel.transform(data).select("id", "rawPrediction").as[TestRawPredictionVector]
       .map(row => (row.id, row.rawPrediction(0), row.rawPrediction(1)))
     val predictions = data.map(row => new TestRawPredictionVector(row.id, model.predictImpl(row.features)))
@@ -57,8 +58,8 @@ trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }
 
-  def assertMultiClassificationModelRawSame[M <: Model[M]](data: Dataset[SVMData], sparkModel: Model[M], model: MLModel
-                                                       ) = {
+  def assertMultiClassificationModelRawSame[M <: SparkModel[M]](data: Dataset[SVMData], sparkModel: SparkModel[M],
+                                                                model: Model) = {
     val expected = sparkModel.transform(data).select("id", "rawPrediction").as[TestRawPredictionVector]
       .map(row => (row.id, row.rawPrediction(0), row.rawPrediction(1), row.rawPrediction(2)))
     val predictions = data.map(row => new TestRawPredictionVector(row.id, model.predictImpl(row.features)))
@@ -66,8 +67,8 @@ trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }
 
-  def assertBinaryClassificationModelProbabilitySame[M <: Model[M]](data: Dataset[SVMData], sparkModel: Model[M],
-                                                                    model: MLModel) = {
+  def assertBinaryClassificationModelProbabilitySame[M <: SparkModel[M]](data: Dataset[SVMData],
+                                                                         sparkModel: SparkModel[M], model: Model) = {
     val expected = sparkModel.transform(data).select("id", "probability").as[TestProbabilityVector]
       .map(row => (row.id, row.probability(0), row.probability(1)))
     val predictions = data.map(row => new TestProbabilityVector(row.id, model.predictImpl(row.features)))
@@ -75,8 +76,8 @@ trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }
 
-  def assertMultiClassificationModelProbabilitySame[M <: Model[M]](data: Dataset[SVMData], sparkModel: Model[M],
-                                                                   model: MLModel) = {
+  def assertMultiClassificationModelProbabilitySame[M <: SparkModel[M]](data: Dataset[SVMData],
+                                                                        sparkModel: SparkModel[M], model: Model) = {
     val expected = sparkModel.transform(data).select("id", "probability").as[TestProbabilityVector]
       .map(row => (row.id, row.probability(0), row.probability(1), row.probability(2)))
     val predictions = data.map(row => new TestProbabilityVector(row.id, model.predictImpl(row.features)))
@@ -84,13 +85,13 @@ trait ModelTestBase extends JUnitSuite with DatasetSuiteBase {
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }
 
-  def assertRegressionModelSame[M <: Model[M]](data: Dataset[SVMData], sparkModel: Model[M], model: MLModel) = {
+  def assertRegressionModelSame[M <: SparkModel[M]](data: Dataset[SVMData], sparkModel: SparkModel[M], model: Model) = {
     val expected = sparkModel.transform(data).select("id", "prediction").as[TestPredictionScalar]
     val predictions = data.map(row => new TestPredictionScalar(row.id, model.predictImpl(row.features)(0)))
     assertDatasetApproximateEquals(expected, predictions, 0.001)
   }
 
-  def saveAndLoadModel(model: MLModel, path: String, modelLoadingFun: (InputStream) => MLModel): MLModel = {
+  def saveAndLoadModel(model: Model, path: String, modelLoadingFun: (InputStream) => Model): Model = {
     val os = new FileOutputStream(new File(path))
     try {
       model.save(os)

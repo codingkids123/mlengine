@@ -1,5 +1,9 @@
 package com.lz.mlengine.spark
 
+import scala.collection.mutable.{Map => MutableMap}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.linalg.Vectors
@@ -8,10 +12,6 @@ import org.scalatest.{FlatSpec, Matchers}
 import com.lz.mlengine.core.FeatureSet
 import com.lz.mlengine.core.classification.LogisticRegressionModel
 import com.lz.mlengine.core.regression.LinearRegressionModel
-
-import scala.collection.mutable.{Map => MutableMap}
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 class ClassificationTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase {
 
@@ -157,7 +157,7 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
     val trainer = new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](
       new cl.LogisticRegression())(spark)
 
-    val (model, metrics) = Trainer.train(trainer, features, trainLabels, testLabels)(spark)
+    val (model, metrics) = Trainer.trainClassifier(trainer, features, trainLabels, testLabels)(spark)
     model.asInstanceOf[LogisticRegressionModel].coefficients.size should be (3)
     metrics.confusionMatrices.size should be (2)
   }
@@ -176,7 +176,7 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
     val trainer = new RegressionTrainer[rg.LinearRegression, rg.LinearRegressionModel](
       new rg.LinearRegression())(spark)
 
-    val (model, metrics) = Trainer.train(trainer, features, trainLabels, testLabels)(spark)
+    val (model, metrics) = Trainer.trainRegressor(trainer, features, trainLabels, testLabels)(spark)
     model.asInstanceOf[LinearRegressionModel].coefficients.size should be (3)
     metrics.explainedVariance should be >= -0.00001
     metrics.meanAbsoluteError should be >= -0.00001

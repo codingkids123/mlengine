@@ -4,7 +4,7 @@ import java.io._
 
 import breeze.linalg.{Vector, VectorBuilder}
 
-abstract class MLModel(val featureToIndexMap: Map[String, Int]) extends Serializable {
+abstract class Model(val featureToIndexMap: Map[String, Int]) extends Serializable {
 
   def predict(feature: FeatureSet): PredictionSet = {
     val vector = convertFeatureSetToVector(feature)
@@ -43,8 +43,9 @@ abstract class MLModel(val featureToIndexMap: Map[String, Int]) extends Serializ
 
 }
 
-abstract class ClassificationModel(override val featureToIndexMap: Map[String, Int], val indexToLabelMap: Map[Int, String]
-                                  ) extends MLModel(featureToIndexMap) with Serializable {
+abstract class ClassificationModel(override val featureToIndexMap: Map[String, Int],
+                                   val indexToLabelMap: Map[Int, String]
+                                  ) extends Model(featureToIndexMap) with Serializable {
   override private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet = {
     new PredictionSet(
       id,
@@ -54,7 +55,7 @@ abstract class ClassificationModel(override val featureToIndexMap: Map[String, I
 
 }
 
-abstract class RegressionModel(override val featureToIndexMap: Map[String, Int]) extends MLModel(featureToIndexMap)
+abstract class RegressionModel(override val featureToIndexMap: Map[String, Int]) extends Model(featureToIndexMap)
   with Serializable {
 
   override private[mlengine] def convertVectorToPredictionSet(id: String, vector: Vector[Double]): PredictionSet = {
@@ -63,7 +64,7 @@ abstract class RegressionModel(override val featureToIndexMap: Map[String, Int])
 
 }
 
-trait MLModelLoader[M] {
+trait ModelLoader[M] {
 
   def load(inputStream: InputStream): M = {
     val objectInputStream = new ObjectInputStream(inputStream)

@@ -2,7 +2,7 @@ package com.lz.mlengine.core.regression
 
 import breeze.linalg.{DenseVector, Vector}
 import com.lz.mlengine.core.tree.Node
-import com.lz.mlengine.core.{MLModelLoader, RegressionModel}
+import com.lz.mlengine.core.{ModelLoader, RegressionModel}
 
 class DecisionTreeRegressionModel(val rootNode: Node, override val featureToIndexMap: Map[String, Int]
                                  ) extends RegressionModel(featureToIndexMap) {
@@ -13,4 +13,4 @@ class DecisionTreeRegressionModel(val rootNode: Node, override val featureToInde
 
 }
 
-object DecisionTreeRegressionModel extends MLModelLoader[DecisionTreeRegressionModel]
+object DecisionTreeRegressionModel extends ModelLoader[DecisionTreeRegressionModel]

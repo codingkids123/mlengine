@@ -1,7 +1,7 @@
 package com.lz.mlengine.core.classification
 
 import breeze.linalg.{DenseVector, Vector}
-import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, ModelLoader}
 import com.lz.mlengine.core.regression.DecisionTreeRegressionModel
 
 class GBTClassificationModel(val trees: Array[DecisionTreeRegressionModel], val weights: Array[Double],
@@ -20,4 +20,4 @@ class GBTClassificationModel(val trees: Array[DecisionTreeRegressionModel], val 
 
 }
 
-object GBTClassificationModel extends MLModelLoader[GBTClassificationModel]
+object GBTClassificationModel extends ModelLoader[GBTClassificationModel]

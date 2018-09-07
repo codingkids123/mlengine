@@ -2,7 +2,7 @@ package com.lz.mlengine.core.classification
 
 import breeze.linalg.{Vector, sum}
 import com.lz.mlengine.core.tree.Node
-import com.lz.mlengine.core.{ClassificationModel, MLModelLoader}
+import com.lz.mlengine.core.{ClassificationModel, ModelLoader}
 
 class DecisionTreeClassificationModel(val rootNode: Node, override val featureToIndexMap: Map[String, Int],
                                       override val indexToLabelMap: Map[Int, String]
@@ -15,4 +15,4 @@ class DecisionTreeClassificationModel(val rootNode: Node, override val featureTo
 
 }
 
-object DecisionTreeClassificationModel extends MLModelLoader[DecisionTreeClassificationModel]
+object DecisionTreeClassificationModel extends ModelLoader[DecisionTreeClassificationModel]

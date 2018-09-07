@@ -3,34 +3,41 @@ package com.lz.mlengine.core
 import java.io.{File, FileInputStream, FileOutputStream}
 
 import scala.collection.mutable.{Map => MutableMap}
+
+import breeze.linalg
 import breeze.linalg.DenseVector
-import breeze.linalg.Vector
 import org.junit.Assert._
 import org.junit.rules.TemporaryFolder
 import org.junit.{Rule, Test}
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.Matchers
 
-class MockClassificationModel(val prediction: Vector[Double], override val featureToIndexMap: Map[String, Int],
+class MockClassificationModel(predictFun: (linalg.Vector[Double]) => linalg.Vector[Double],
+                              override val featureToIndexMap: Map[String, Int],
                               override val indexToLabelMap: Map[Int, String])
   extends ClassificationModel(featureToIndexMap, indexToLabelMap) {
 
-  override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = prediction
+  override private[mlengine] def predictImpl(vector: linalg.Vector[Double]) = {
+    predictFun(vector)
+  }
 
 }
 
-object MockClassificationModel extends MLModelLoader[MockClassificationModel]
+object MockClassificationModel extends ModelLoader[MockClassificationModel]
 
-class MockRegressionModel(val prediction: Vector[Double], override val featureToIndexMap: Map[String, Int])
+class MockRegressionModel(predictFun: (linalg.Vector[Double]) => linalg.Vector[Double],
+                          override val featureToIndexMap: Map[String, Int])
   extends RegressionModel(featureToIndexMap) {
 
-  override private[mlengine] def predictImpl(vector: Vector[Double]): Vector[Double] = prediction
+  override private[mlengine] def predictImpl(vector: linalg.Vector[Double]) = {
+    predictFun(vector)
+  }
 
 }
 
-object MockRegressionModel extends MLModelLoader[MockRegressionModel]
+object MockRegressionModel extends ModelLoader[MockRegressionModel]
 
-class MLModelTest extends JUnitSuite with Matchers {
+class ModelTest extends JUnitSuite with Matchers {
 
   val _temporaryFolder = new TemporaryFolder
 
@@ -39,7 +46,7 @@ class MLModelTest extends JUnitSuite with Matchers {
 
   @Test def testConvertFeatureSetToVector() = {
     val model = new MockRegressionModel(
-      DenseVector(), Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2)
+      (_) => DenseVector(), Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2)
     )
     val feature = new FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 2.0, "feature3" -> 3.0))
     val vector = model.convertFeatureSetToVector(feature)
@@ -49,8 +56,7 @@ class MLModelTest extends JUnitSuite with Matchers {
 
   @Test def testClassificationModelConvertVectorToPredictionSet() = {
     val model = new MockClassificationModel(
-      DenseVector(),
-      Map[String, Int](), Map[Int, String](0 -> "label0", 1 -> "label1")
+      (_) => DenseVector(), Map[String, Int](), Map[Int, String](0 -> "label0", 1 -> "label1")
     )
     val vector = DenseVector(Array(1.0, 2.0))
     val prediction = model.convertVectorToPredictionSet("1", vector)
@@ -60,7 +66,7 @@ class MLModelTest extends JUnitSuite with Matchers {
   }
 
   @Test def testRegressionModelConvertVectorToPredictionSet() = {
-    val model = new MockRegressionModel(DenseVector(), Map[String, Int]())
+    val model = new MockRegressionModel((_) => DenseVector(), Map[String, Int]())
     val vector = DenseVector(Array(1.0))
     val prediction = model.convertVectorToPredictionSet("1", vector)
     val expected = PredictionSet("1", Map("value" -> 1.0))
@@ -71,7 +77,7 @@ class MLModelTest extends JUnitSuite with Matchers {
   @Test def testClassificationModelSaveAndLoadModel() = {
     val path = s"${temporaryFolder.getRoot.getPath}/model"
     val modelToSave = new MockClassificationModel(
-      DenseVector(Array(1.0, 2.0)),
+      (_) => DenseVector(Array(1.0, 2.0)),
       Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2),
       Map[Int, String](0 -> "label0", 1 -> "label1")
     )
@@ -102,7 +108,7 @@ class MLModelTest extends JUnitSuite with Matchers {
   @Test def testRegressionModelSaveAndLoadModel() = {
     val path = s"${temporaryFolder.getRoot.getPath}/model"
     val modelToSave = new MockRegressionModel(
-      DenseVector(Array(1.0, 2.0)),
+      (_) => DenseVector(Array(1.0, 2.0)),
       Map[String, Int]("feature1" -> 0, "feature2" -> 1, "feature3" -> 2)
     )
 

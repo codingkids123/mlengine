@@ -10,7 +10,7 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 
 import com.lz.mlengine.core.classification._
 import com.lz.mlengine.core.regression._
-import com.lz.mlengine.core.{FeatureSet, MLModel}
+import com.lz.mlengine.core.{FeatureSet, Model}
 
 object Pipeline {
 
@@ -131,7 +131,7 @@ object Pipeline {
     }
   }
 
-  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):MLModel = {
+  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):Model = {
     val fs = FileSystem.get(new URI(modelPath), configuration)
     val file = new Path(modelPath)
     try {
