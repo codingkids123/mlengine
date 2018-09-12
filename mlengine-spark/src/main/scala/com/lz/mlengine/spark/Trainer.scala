@@ -2,20 +2,21 @@ package com.lz.mlengine.spark
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import org.apache.spark.ml.{classification => cl}
-import org.apache.spark.ml.{Estimator, Model}
+import org.apache.spark.ml.{Estimator, Model => SparkModel}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.{regression => rg}
 import org.apache.spark.ml.util.MLWritable
 import org.apache.spark.sql.{Dataset, SparkSession}
-import com.lz.mlengine.core.{ClassificationMetrics, ClassificationModel, FeatureSet, RegressionMetrics, RegressionModel}
+import com.lz.mlengine.core.{ClassificationMetrics, ClassificationModel, FeatureSet, Model, RegressionMetrics, RegressionModel, Report}
 import com.lz.mlengine.spark.Converter._
+import org.apache.hadoop.fs.Path
 
 case class LabeledSparkFeature(id: String, features: Vector, label: Double)
 
-abstract class Trainer[E <: Estimator[M], M <: Model[M] with MLWritable](val trainer: E)(implicit spark: SparkSession) {
+abstract class Trainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable](val trainer: E)
+                                                                             (implicit spark: SparkSession) {
 
   import spark.implicits._
 
@@ -31,7 +32,7 @@ abstract class Trainer[E <: Estimator[M], M <: Model[M] with MLWritable](val tra
 
 }
 
-class ClassificationTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
+class ClassificationTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable]
   (override val trainer: E)(implicit spark: SparkSession) extends Trainer[E, M](trainer) {
 
   import spark.implicits._
@@ -89,7 +90,7 @@ class ClassificationTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
 
 }
 
-class RegressionTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
+class RegressionTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable]
   (override val trainer: E)(implicit spark: SparkSession) extends Trainer[E, M](trainer) {
 
   import spark.implicits._
@@ -134,39 +135,102 @@ class RegressionTrainer[E <: Estimator[M], M <: Model[M] with MLWritable]
 object Trainer {
 
   def trainClassifier(trainer: ClassificationTrainer[_, _], features: Dataset[FeatureSet],
-                      trainLabels: Dataset[(String, String)], testLabels: Dataset[(String, String)])
+                      trainLabels: Dataset[(String, String)], testLabels: Dataset[(String, String)],
+                      outputPath: Option[String] = None)
                      (implicit spark: SparkSession): (ClassificationModel, ClassificationMetrics) = {
     val model = trainer.fit(features, trainLabels)
     val metrics = Evaluator.evaluate(features, testLabels, model)
+    if (outputPath.isDefined) {
+      saveModel(model, outputPath.get)
+      generateClassifierReport(metrics, outputPath.get)
+    }
     (model, metrics)
   }
 
   def trainRegressor(trainer: RegressionTrainer[_, _], features: Dataset[FeatureSet],
-                     trainLabels: Dataset[(String, Double)], testLabels: Dataset[(String, Double)])
+                     trainLabels: Dataset[(String, Double)], testLabels: Dataset[(String, Double)],
+                     outputPath: Option[String] = None)
                     (implicit spark: SparkSession): (RegressionModel, RegressionMetrics) = {
     val model = trainer.fit(features, trainLabels)
     val metrics = Evaluator.evaluate(features, testLabels, model)
+    if (outputPath.isDefined) {
+      saveModel(model, outputPath.get)
+      generateRegressorReport(metrics, outputPath.get)
+    }
     (model, metrics)
   }
 
   def trainMultipleClassifier(trainers: Seq[ClassificationTrainer[_, _]], features: Dataset[FeatureSet],
-                              trainLabels: Dataset[(String, String)], testLabels: Dataset[(String, String)])
+                              trainLabels: Dataset[(String, String)], testLabels: Dataset[(String, String)],
+                              outputPath: Option[String] = None)
                              (implicit spark: SparkSession
                              ): Seq[Future[(ClassificationModel, ClassificationMetrics)]] = {
-    trainers.map { trainer =>
+    trainers.zipWithIndex.map { case (trainer, idx) =>
       Future {
-        trainClassifier(trainer, features, trainLabels, testLabels)
+        val path = if (outputPath.isDefined) Some((new Path(outputPath.get, idx.toString)).toUri.toString) else None
+        trainClassifier(trainer, features, trainLabels, testLabels, path)
       }
     }
   }
 
   def trainMultipleRegressor(trainers: Seq[RegressionTrainer[_, _]], features: Dataset[FeatureSet],
-                             trainLabels: Dataset[(String, Double)], testLabels: Dataset[(String, Double)])
+                             trainLabels: Dataset[(String, Double)], testLabels: Dataset[(String, Double)],
+                             outputPath: Option[String] = None)
                             (implicit spark: SparkSession): Seq[Future[(RegressionModel, RegressionMetrics)]] = {
-    trainers.map { trainer =>
+    trainers.zipWithIndex.map { case (trainer, idx) =>
       Future {
-        trainRegressor(trainer, features, trainLabels, testLabels)
+        val path = if (outputPath.isDefined) Some((new Path(outputPath.get, idx.toString)).toUri.toString) else None
+        trainRegressor(trainer, features, trainLabels, testLabels, path)
       }
+    }
+  }
+
+  def generateClassifierReport(metrics: ClassificationMetrics, path: String)(implicit spark: SparkSession): Unit = {
+    val hadoopConf = spark.sparkContext.hadoopConfiguration
+    val fs = new Path(path).getFileSystem(hadoopConf)
+    val prCurveStream = fs.create(new Path(path, "pr-curve.png"))
+    val rocCurveStream = fs.create(new Path(path, "roc-curve.png"))
+    val reportStream = fs.create(new Path(path, "metrics.csv"))
+    try {
+      Report.plotCurves(
+        metrics.labels.map { l =>
+          (metrics.prCurve(l), s"Label: $l", "precision", "recall") },
+        prCurveStream, "PR Curve")
+      Report.plotCurves(
+        metrics.labels.map {
+          l =>
+            (
+              metrics.rocCurve(l), s"Label: $l, Area Under Curve: ${metrics.areaUnderROC(l)}", "false positive rate",
+              "true positive rate"
+            )
+        }, rocCurveStream, "ROC Curve")
+      Report.generateReport(metrics, reportStream)
+    } finally {
+      prCurveStream.close()
+      rocCurveStream.close()
+      reportStream.close()
+    }
+  }
+
+  def generateRegressorReport(metrics: RegressionMetrics, path: String)(implicit spark: SparkSession): Unit = {
+    val hadoopConf = spark.sparkContext.hadoopConfiguration
+    val fs = new Path(path).getFileSystem(hadoopConf)
+    val reportStream = fs.create(new Path(path, "metrics.csv"))
+    try {
+      Report.generateReport(metrics, reportStream)
+    } finally {
+      reportStream.close()
+    }
+  }
+
+  def saveModel(model: Model, path: String)(implicit spark: SparkSession): Unit = {
+    val hadoopConf = spark.sparkContext.hadoopConfiguration
+    val fs = new Path(path).getFileSystem(hadoopConf)
+    val modelStream = fs.create(new Path(path, "model.data"))
+    try {
+      model.save(modelStream)
+    } finally {
+      modelStream.close()
     }
   }
 

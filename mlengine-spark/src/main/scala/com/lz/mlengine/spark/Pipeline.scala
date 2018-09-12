@@ -2,7 +2,6 @@ package com.lz.mlengine.spark
 
 import java.net.URI
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.{regression => rg}
@@ -13,8 +12,6 @@ import com.lz.mlengine.core.regression._
 import com.lz.mlengine.core.{FeatureSet, Model}
 
 object Pipeline {
-
-  val configuration = new Configuration()
 
   // Classification.
   val DECISION_TREE_CLASSIFIER = "DecisionTreeClassifier"
@@ -131,34 +128,30 @@ object Pipeline {
     }
   }
 
-  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession):Model = {
-    val fs = FileSystem.get(new URI(modelPath), configuration)
+  def getModel(modelName: String, modelPath: String)(implicit spark: SparkSession): Model = {
+    val fs = FileSystem.get(new URI(modelPath), spark.sparkContext.hadoopConfiguration)
     val file = new Path(modelPath)
+    val fis = fs.open(file)
     try {
-      val fis = fs.open(file)
-      try {
-        modelName match {
-          // TODO: Add more model support.
-          // Classification models.
-          case DECISION_TREE_CLASSIFIER => DecisionTreeClassificationModel.load(fis)
-          case GBT_CLASSIFIER => GBTClassificationModel.load(fis)
-          case LINEAR_SVC => LinearSVCModel.load(fis)
-          case LOGISTIC_REGRESSION => LogisticRegressionModel.load(fis)
-          case RANDOM_FOREST_CLASSIFIER => RandomForestClassificationModel.load(fis)
+      modelName match {
+        // TODO: Add more model support.
+        // Classification models.
+        case DECISION_TREE_CLASSIFIER => DecisionTreeClassificationModel.load(fis)
+        case GBT_CLASSIFIER => GBTClassificationModel.load(fis)
+        case LINEAR_SVC => LinearSVCModel.load(fis)
+        case LOGISTIC_REGRESSION => LogisticRegressionModel.load(fis)
+        case RANDOM_FOREST_CLASSIFIER => RandomForestClassificationModel.load(fis)
 
-          // Regression models.
-          case DECISION_TREE_REGRESSOR => DecisionTreeRegressionModel.load(fis)
-          case GBT_REGRESSOR => GBTRegressionModel.load(fis)
-          case LINEAR_REGRESSION => LinearRegressionModel.load(fis)
-          case RANDOM_FOREST_REGRESSOR => RandomForestRegressionModel.load(fis)
+        // Regression models.
+        case DECISION_TREE_REGRESSOR => DecisionTreeRegressionModel.load(fis)
+        case GBT_REGRESSOR => GBTRegressionModel.load(fis)
+        case LINEAR_REGRESSION => LinearRegressionModel.load(fis)
+        case RANDOM_FOREST_REGRESSOR => RandomForestRegressionModel.load(fis)
 
-          case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
-        }
-      } finally {
-        fis.close
+        case _ => throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
       }
     } finally {
-      fs.close()
+      fis.close
     }
   }
 
@@ -176,18 +169,14 @@ object Pipeline {
       throw new IllegalArgumentException(s"Unsupported model: ${modelName}")
     }
 
-    val fs = FileSystem.get(new URI(modelPath), configuration)
+    val fs = FileSystem.get(new URI(modelPath), spark.sparkContext.hadoopConfiguration)
     val file = new Path(modelPath)
+    if (fs.exists(file)) fs.delete(file, false)
+    val fos = fs.create(file)
     try {
-      if (fs.exists(file)) fs.delete(file, false)
-      val fos = fs.create(file)
-      try {
-        model.save(fos)
-      } finally {
-        fos.close
-      }
+      model.save(fos)
     } finally {
-      fs.close
+      fos.close
     }
   }
 

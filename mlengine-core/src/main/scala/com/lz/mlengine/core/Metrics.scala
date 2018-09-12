@@ -20,6 +20,8 @@ case class ConfusionMatrix(tp: Int, fp: Int, tn: Int, fn: Int) {
 
 class ClassificationMetrics(val confusionMatrices: Map[String, Map[Double, ConfusionMatrix]]) extends Serializable {
 
+  def labels = confusionMatrices.keys.toSeq
+
   def prCurve(label: String) =
     confusionMatrices.get(label).get.values.toSeq.map(m => (m.recall, m.precision)).sortBy(_._1)
 

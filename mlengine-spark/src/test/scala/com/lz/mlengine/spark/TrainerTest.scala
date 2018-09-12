@@ -1,5 +1,7 @@
 package com.lz.mlengine.spark
 
+import java.nio.file.{Files, Paths}
+
 import scala.collection.mutable.{Map => MutableMap}
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -8,7 +10,12 @@ import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.apache.spark.ml.{classification => cl}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.ml.{regression => rg}
+import org.junit.Assert._
+import org.junit.{Rule, Test}
+import org.junit.rules.TemporaryFolder
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.junit.JUnitSuite
+
 import com.lz.mlengine.core.FeatureSet
 import com.lz.mlengine.core.classification.LogisticRegressionModel
 import com.lz.mlengine.core.regression.LinearRegressionModel
@@ -139,11 +146,16 @@ class RegressionTrainerTest extends FlatSpec with Matchers with DatasetSuiteBase
 
 }
 
-class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
+class TrainerObjectTest extends JUnitSuite with Matchers with DatasetSuiteBase {
 
   import spark.implicits._
 
-  "train" should "train and evaluate classification model" in {
+  val _temporaryFolder = new TemporaryFolder
+
+  @Rule
+  def temporaryFolder = _temporaryFolder
+
+  @Test def testTrainAndEvaluateClassification = {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
       FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
@@ -156,13 +168,19 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
     val testLabels = Seq(("4", "a"), ("5", "b"), ("6", "a")).toDS
     val trainer = new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](
       new cl.LogisticRegression())(spark)
+    val path = temporaryFolder.getRoot.toString + "/classification"
 
-    val (model, metrics) = Trainer.trainClassifier(trainer, features, trainLabels, testLabels)(spark)
-    model.asInstanceOf[LogisticRegressionModel].coefficients.size should be (3)
-    metrics.confusionMatrices.size should be (2)
+    val (model, metrics) = Trainer.trainClassifier(trainer, features, trainLabels, testLabels, Some(path)) (spark)
+
+    assertEquals(3, model.asInstanceOf[LogisticRegressionModel].coefficients.size)
+    assertEquals(2, metrics.confusionMatrices.size)
+    assertTrue(Files.exists(Paths.get(path + "/model.data")))
+    assertTrue(Files.exists(Paths.get(path + "/metrics.csv")))
+    assertTrue(Files.exists(Paths.get(path + "/pr-curve.png")))
+    assertTrue(Files.exists(Paths.get(path + "/roc-curve.png")))
   }
 
-  "train" should "train and evaluate regression model" in {
+  @Test def testTrainAndEvaluateRegression = {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
       FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
@@ -175,16 +193,20 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
     val testLabels = Seq(("4", 0.8), ("5", 0.5), ("6", 0.2)).toDS
     val trainer = new RegressionTrainer[rg.LinearRegression, rg.LinearRegressionModel](
       new rg.LinearRegression())(spark)
+    val path = temporaryFolder.getRoot.toString + "/regression"
 
-    val (model, metrics) = Trainer.trainRegressor(trainer, features, trainLabels, testLabels)(spark)
-    model.asInstanceOf[LinearRegressionModel].coefficients.size should be (3)
-    metrics.explainedVariance should be >= -0.00001
-    metrics.meanAbsoluteError should be >= -0.00001
-    metrics.meanSquaredError should be >= -0.00001
-    metrics.r2 should be >= -0.00001
+    val (model, metrics) = Trainer.trainRegressor(trainer, features, trainLabels, testLabels, Some(path))(spark)
+
+    assertEquals(3, model.asInstanceOf[LinearRegressionModel].coefficients.size)
+    assertTrue(metrics.explainedVariance >= -0.00001)
+    assertTrue(metrics.meanAbsoluteError >= -0.00001)
+    assertTrue(metrics.meanSquaredError >= -0.00001)
+    assertTrue(metrics.r2 >= -0.00001)
+    assertTrue(Files.exists(Paths.get(path + "/model.data")))
+    assertTrue(Files.exists(Paths.get(path + "/metrics.csv")))
   }
 
-  "trainMultipleClassifier" should "train and evaluate multiple classification models" in {
+  @Test def testTrainAndEvaluateMultipleClassification = {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
       FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
@@ -203,16 +225,21 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
       new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](
         new cl.LogisticRegression().setRegParam(0.001))(spark)
     )
+    val path = temporaryFolder.getRoot.toString + "/classifications"
 
-    val results = Trainer.trainMultipleClassifier(trainers, features, trainLabels, testLabels)(spark)
-    results.foreach { f =>
+    val results = Trainer.trainMultipleClassifier(trainers, features, trainLabels, testLabels, Some(path))(spark)
+    results.zipWithIndex.foreach { case (f, idx) =>
       val (model, metrics) = Await.result(f, 100.second)
-      model.asInstanceOf[LogisticRegressionModel].coefficients.size should be (3)
-      metrics.confusionMatrices.size should be (2)
+      assertEquals(3, model.asInstanceOf[LogisticRegressionModel].coefficients.size)
+      assertEquals(2, metrics.confusionMatrices.size)
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/model.data")))
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/metrics.csv")))
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/pr-curve.png")))
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/roc-curve.png")))
     }
   }
 
-  "trainMultipleRegressor" should "train and evaluate multiple regression models" in {
+  @Test def testTrainAndEvaluateMultipleRegression = {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
       FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
@@ -231,15 +258,18 @@ class TrainerObjectTest extends FlatSpec with Matchers with DatasetSuiteBase {
       new RegressionTrainer[rg.LinearRegression, rg.LinearRegressionModel](
         new rg.LinearRegression().setRegParam(0.001))(spark)
     )
+    val path = temporaryFolder.getRoot.toString + "/regressions"
 
-    val results = Trainer.trainMultipleRegressor(trainers, features, trainLabels, testLabels)(spark)
-    results.foreach { f =>
+    val results = Trainer.trainMultipleRegressor(trainers, features, trainLabels, testLabels, Some(path))(spark)
+    results.zipWithIndex.foreach { case (f, idx) =>
       val (model, metrics) = Await.result(f, 100.second)
-      model.asInstanceOf[LinearRegressionModel].coefficients.size should be (3)
-      metrics.explainedVariance should be >= -0.00001
-      metrics.meanAbsoluteError should be >= -0.00001
-      metrics.meanSquaredError should be >= -0.00001
-      metrics.r2 should be >= -0.00001
+      assertEquals(3, model.asInstanceOf[LinearRegressionModel].coefficients.size)
+      assertTrue(metrics.explainedVariance >= -0.00001)
+      assertTrue(metrics.meanAbsoluteError >= -0.00001)
+      assertTrue(metrics.meanSquaredError >= -0.00001)
+      assertTrue(metrics.r2 >= -0.00001)
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/model.data")))
+      assertTrue(Files.exists(Paths.get(path + s"/$idx/metrics.csv")))
     }
   }
 
