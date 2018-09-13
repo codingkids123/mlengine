@@ -38,12 +38,12 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>breeze_2.11</artifactId> <!-- or 2.11 -->
+      <artifactId>breeze_${scala.compat.version}</artifactId>
       <version>0.13.2</version>
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>breeze-viz_2.11</artifactId> <!-- or 2.11 -->
+      <artifactId>breeze-viz_${scala.compat.version}</artifactId>
       <version>0.13.2</version>
     </dependency>
 
