@@ -1,5 +1,6 @@
 package com.lz.mlengine.core
 
+import java.awt.Graphics2D
 import java.io.OutputStream
 import java.nio.charset.Charset
 
@@ -12,25 +13,38 @@ object Report {
 
   val UTF_8 = Charset.forName("UTF-8")
 
-  def plotCurves(curves: Seq[Curve], out: OutputStream, title: String, dpi: Int = 72) = {
-    val f = Figure()
+  val PLOT_WIDTH = 600
+  val PLOT_HEIGHT = 400
+  val PLOT_COLS = 2
 
-    f.height = 400 * curves.length
-    curves.zipWithIndex.map {
+  def plotCurves(curves: Seq[Curve], out: OutputStream, title: String, dpi: Int = 72) = {
+    val cols = PLOT_COLS
+    val rows = curves.length / cols + curves.length % cols
+
+    val plots = curves.zipWithIndex.map {
       case ((curve, title, xLabel, yLabel), index) =>
-        val p = f.subplot(curves.length, 1, index)
+        val p = new Plot()
         p += plot(DenseVector(curve.map(_._1).toArray), DenseVector(curve.map(_._2).toArray))
         p.title = title
         p.xlabel = xLabel
         p.ylabel = yLabel
+        p
     }
 
-    f.refresh()
+    def drawPlots(g2d : Graphics2D) {
+      var px = 0; var py = 0
+      for (p <- plots) {
+        p.chart.draw(g2d, new java.awt.Rectangle(px * PLOT_WIDTH, py * PLOT_HEIGHT, PLOT_WIDTH, PLOT_HEIGHT))
+        px = (px +1) % cols
+        if (px == 0) py = (py + 1) % rows
+      }
+    }
+
     ExportGraphics.writePNG(
       out,
-      draw = f.drawPlots,
-      width = f.width,
-      height = f.height,
+      draw = drawPlots,
+      width = PLOT_WIDTH * cols,
+      height =  PLOT_HEIGHT * rows,
       dpi = dpi)
   }
 

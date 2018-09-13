@@ -119,6 +119,10 @@
         <artifactId>scalatest-maven-plugin</artifactId>
         <version>2.0.0</version>
         <configuration>
+          <systemProperties>
+            <!-- Test should be in a headless server environment. -->
+            <java.awt.headless>true</java.awt.headless>
+          </systemProperties>
           <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
           <junitxml>.</junitxml>
           <filereports>TestSuiteReport.txt</filereports>
