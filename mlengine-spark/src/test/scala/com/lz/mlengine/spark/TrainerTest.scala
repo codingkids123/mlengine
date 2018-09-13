@@ -36,6 +36,18 @@ class ClassificationTrainerTest extends FlatSpec with Matchers with DatasetSuite
     featureToIndexMap should be(Map("feature1" -> 0, "feature2" -> 1, "feature3" -> 2))
   }
 
+  "getFeatureToIndexMap" should "filter feature based on feature prefixes" in {
+    val features = Seq(
+      FeatureSet("1", MutableMap("feature1-1" -> 1.0, "feature2-1" -> 1.0)),
+      FeatureSet("2", MutableMap("feature2-1" -> 1.0, "feature3-1" -> 1.0)),
+      FeatureSet("3", MutableMap("feature1-1" -> 1.0, "feature3-1" -> 1.0))
+    ).toDS
+
+    val featureToIndexMap = getTrainer(Seq("feature1", "feature2")).getFeatureToIndexMap(features)
+
+    featureToIndexMap should be(Map("feature1-1" -> 0, "feature2-1" -> 1))
+  }
+
   "getLabelToIndexMap" should "generate a map from label to index" in {
     val labels = Seq(
       ("1", "positive"),
@@ -72,6 +84,29 @@ class ClassificationTrainerTest extends FlatSpec with Matchers with DatasetSuite
     assertDatasetEquals(expected, labeledFeatures)
   }
 
+  "getLabeledSparkFeature" should "skip feature not in feature to index map" in {
+    val features = Seq(
+      FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
+      FeatureSet("2", MutableMap("feature2" -> 1.0, "feature3" -> 1.0)),
+      FeatureSet("3", MutableMap("feature1" -> 1.0, "feature3" -> 1.0))
+    ).toDS
+
+    val labels = Seq(("1", "positive"), ("2", "positive"), ("3", "negative")).toDS
+
+    val featureToIndexMap = Map("feature1" -> 0, "feature2" -> 1)
+    val labelToIndexMap = Map("negative" -> 0, "positive" -> 1)
+
+    val labeledFeatures = getTrainer().getLabeledSparkFeature(features, labels, featureToIndexMap, labelToIndexMap)
+
+    val expected = Seq(
+      LabeledSparkFeature("1", Vectors.sparse(2, Seq((0, 1.0), (1, 1.0))), 1.0),
+      LabeledSparkFeature("2", Vectors.sparse(2, Seq((1, 1.0))), 1.0),
+      LabeledSparkFeature("3", Vectors.sparse(2, Seq((0, 1.0))), 0.0)
+    ).toDS
+
+    assertDatasetEquals(expected, labeledFeatures)
+  }
+
   "fit" should "train classification model with index to label map" in {
     val features = Seq(
       FeatureSet("1", MutableMap("feature1" -> 1.0, "feature2" -> 1.0)),
@@ -91,8 +126,10 @@ class ClassificationTrainerTest extends FlatSpec with Matchers with DatasetSuite
     model.indexToLabelMap should be (Map(0 -> "negative", 1 -> "positive"))
   }
 
-  def getTrainer(): ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel] = {
-    new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](new cl.LogisticRegression())(spark)
+  def getTrainer(featurePrefixes: Seq[String] = Seq[String]()
+                ): ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel] = {
+    new ClassificationTrainer[cl.LogisticRegression, cl.LogisticRegressionModel](
+      new cl.LogisticRegression(), featurePrefixes)(spark)
   }
 
 }

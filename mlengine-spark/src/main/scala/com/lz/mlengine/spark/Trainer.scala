@@ -15,16 +15,25 @@ import org.apache.hadoop.fs.Path
 
 case class LabeledSparkFeature(id: String, features: Vector, label: Double)
 
-abstract class Trainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable](val trainer: E)
+abstract class Trainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable](val trainer: E,
+                                                                              val featurePrefixes: Seq[String])
                                                                              (implicit spark: SparkSession) {
 
   import spark.implicits._
 
   private[mlengine] def getFeatureToIndexMap(features: Dataset[FeatureSet]): Map[String, Int] = {
+    val featurePrefixSet = featurePrefixes.toSet
     features
       .flatMap(f => f.features.toSeq.map(_._1))
-      .distinct()
-      .collect()
+      .filter(name => {
+        if (featurePrefixSet.isEmpty) {
+          true
+        } else {
+          featurePrefixSet.exists(prefix => name.startsWith(prefix))
+        }
+      })
+      .distinct
+      .collect
       .sorted
       .zipWithIndex
       .toMap
@@ -33,15 +42,16 @@ abstract class Trainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable](va
 }
 
 class ClassificationTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable]
-  (override val trainer: E)(implicit spark: SparkSession) extends Trainer[E, M](trainer) {
+  (override val trainer: E, override val featurePrefixes: Seq[String] = Seq[String]())
+  (implicit spark: SparkSession) extends Trainer[E, M](trainer, featurePrefixes) {
 
   import spark.implicits._
 
   private[mlengine] def getLabelToIndexMap(labels: Dataset[(String, String)]): Map[String, Int] = {
     labels
       .map(_._2)
-      .distinct()
-      .collect()
+      .distinct
+      .collect
       .sorted
       .zipWithIndex
       .toMap
@@ -52,12 +62,17 @@ class ClassificationTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritabl
                                                labelToIndexMap: Map[String, Int]): Dataset[LabeledSparkFeature] = {
     features
       .joinWith(labels, features.col("id") === labels.col("_1"))
-      .map(row => {
-        val values = row._1.features.toSeq.map(kv => (featureToIndexMap.get(kv._1).get, kv._2)).sortBy(_._1)
-        val feature = Vectors.sparse(featureToIndexMap.size, values)
-        val label = labelToIndexMap.get(row._2._2).get.toDouble
-        LabeledSparkFeature(row._1.id, feature, label)
-      })
+      .map { case (feature, (_, label)) => {
+        val values = feature.features.toSeq.flatMap(kv => {
+          featureToIndexMap.get(kv._1) match {
+            case Some(index) => Seq((index, kv._2))
+            case None => Seq()
+          }
+        }).sortBy(_._1)
+        val sparkFeature = Vectors.sparse(featureToIndexMap.size, values)
+        val sparkLabel = labelToIndexMap.get(label).get.toDouble
+        LabeledSparkFeature(feature.id, sparkFeature, sparkLabel)
+      }}
   }
 
   def fit(features: Dataset[FeatureSet], labels: Dataset[(String, String)]): ClassificationModel = {
@@ -91,7 +106,8 @@ class ClassificationTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritabl
 }
 
 class RegressionTrainer[E <: Estimator[M], M <: SparkModel[M] with MLWritable]
-  (override val trainer: E)(implicit spark: SparkSession) extends Trainer[E, M](trainer) {
+  (override val trainer: E, override val featurePrefixes: Seq[String] = Seq[String]())
+  (implicit spark: SparkSession) extends Trainer[E, M](trainer, featurePrefixes) {
 
   import spark.implicits._
 
