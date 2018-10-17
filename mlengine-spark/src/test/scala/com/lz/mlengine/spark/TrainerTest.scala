@@ -264,9 +264,9 @@ class TrainerObjectTest extends JUnitSuite with Matchers with DatasetSuiteBase {
     )
     val path = temporaryFolder.getRoot.toString + "/classifications"
 
-    val results = Trainer.trainMultipleClassifier(trainers, features, trainLabels, testLabels, Some(path))(spark)
-    results.zipWithIndex.foreach { case (f, idx) =>
-      val (model, metrics) = Await.result(f, 100.second)
+    val future = Trainer.trainMultipleClassifier(trainers, features, trainLabels, testLabels, Some(path))(spark)
+    val results = Await.result(future, 100.second)
+    results.zipWithIndex.foreach { case ((model, metrics), idx) =>
       assertEquals(3, model.asInstanceOf[LogisticRegressionModel].coefficients.size)
       assertEquals(2, metrics.confusionMatrices.size)
       assertTrue(Files.exists(Paths.get(path + s"/$idx/model.data")))
@@ -274,6 +274,7 @@ class TrainerObjectTest extends JUnitSuite with Matchers with DatasetSuiteBase {
       assertTrue(Files.exists(Paths.get(path + s"/$idx/pr-curve.png")))
       assertTrue(Files.exists(Paths.get(path + s"/$idx/roc-curve.png")))
     }
+    assertTrue(Files.exists(Paths.get(path + "/summary.csv")))
   }
 
   @Test def testTrainAndEvaluateMultipleRegression = {
@@ -297,9 +298,9 @@ class TrainerObjectTest extends JUnitSuite with Matchers with DatasetSuiteBase {
     )
     val path = temporaryFolder.getRoot.toString + "/regressions"
 
-    val results = Trainer.trainMultipleRegressor(trainers, features, trainLabels, testLabels, Some(path))(spark)
-    results.zipWithIndex.foreach { case (f, idx) =>
-      val (model, metrics) = Await.result(f, 100.second)
+    val future = Trainer.trainMultipleRegressor(trainers, features, trainLabels, testLabels, Some(path))(spark)
+    val results = Await.result(future, 100.second)
+    results.zipWithIndex.foreach { case ((model, metrics), idx) =>
       assertEquals(3, model.asInstanceOf[LinearRegressionModel].coefficients.size)
       assertTrue(metrics.explainedVariance >= -0.00001)
       assertTrue(metrics.meanAbsoluteError >= -0.00001)
@@ -308,6 +309,7 @@ class TrainerObjectTest extends JUnitSuite with Matchers with DatasetSuiteBase {
       assertTrue(Files.exists(Paths.get(path + s"/$idx/model.data")))
       assertTrue(Files.exists(Paths.get(path + s"/$idx/metrics.csv")))
     }
+    assertTrue(Files.exists(Paths.get(path + "/summary.csv")))
   }
 
 }

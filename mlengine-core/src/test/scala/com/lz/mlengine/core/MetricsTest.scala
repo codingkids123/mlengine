@@ -26,5 +26,13 @@ class ClassificationMetricsTest extends FlatSpec with Matchers {
     getMetrics("test").areaUnderROC("test") should be (0.615)
   }
 
+  "precision" should "calculate precision given recall" in {
+    getMetrics("test").precision("test", 0.6).get should be (0.5)
+  }
+
+  "recall" should "calculate recall given precision" in {
+    getMetrics("test").recall("test", 0.6).get should be (0.5)
+  }
+
 }
 
